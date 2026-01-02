@@ -1,0 +1,24 @@
+# macOS
+__MACOSX/
+.DS_Store
+
+# Composer
+vendor/
+composer.lock
+
+# Database
+siyean/storage/pos.db
+*.db
+
+# Local configuration
+siyean/config/app.php
+
+# IDE
+.idea/
+.vscode/
+*.swp
+*.swo
+*~
+
+# Logs
+*.log
