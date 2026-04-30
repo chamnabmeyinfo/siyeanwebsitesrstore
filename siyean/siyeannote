@@ -1,2 +1,18 @@
 ssh srmacshop
 Siyean@12345$$
+
+
+cd ~/public_html
+git pull origin main
+
+ssh srmacshop
+cd ~/public_html/siyean
+
+
+php scripts/create_user.php --name='Store Owner 2' --email='longsiyean.login@gmail.com' --password='TempLogin123!' --role=admin
+
+
+
+php artisan serve
+
+

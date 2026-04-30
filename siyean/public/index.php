@@ -39,13 +39,13 @@ $requestPath = parse_url($_SERVER['REQUEST_URI'], PHP_URL_PATH) ?: '/';
 $method = $_SERVER['REQUEST_METHOD'];
 
 if (!isPublicRoute($method, $requestPath) && !currentUser()) {
-    redirect('/login');
+    legacyRedirect('/login');
 }
 
 switch (true) {
     case $method === 'GET' && $requestPath === '/login':
         if (currentUser()) {
-            redirect('/');
+            legacyRedirect('/');
         }
         render('auth_login.php', ['layout' => 'auth']);
         break;
@@ -83,7 +83,7 @@ switch (true) {
         $record = $inventory->findBySku($sku);
         if (!$record) {
             setFlash('error', 'Inventory item not found.');
-            redirect('/inventory');
+            legacyRedirect('/inventory');
         }
         render('inventory_form.php', ['mode' => 'edit', 'item' => $record]);
         break;
@@ -191,9 +191,12 @@ function render(string $template, array $data = []): void
     include basePath($layoutFile);
 }
 
-function redirect(string $path): void
+function legacyRedirect(string $path): void
 {
     header("Location: {$path}");
+    if (defined('LARAVEL_BRIDGE_MODE') && LARAVEL_BRIDGE_MODE === true) {
+        throw new RuntimeException('__LEGACY_REDIRECT__:' . $path);
+    }
     exit;
 }
 
@@ -233,7 +236,7 @@ function currentUser(): ?array
 function requireAuth(): void
 {
     if (!currentUser()) {
-        redirect('/login');
+        legacyRedirect('/login');
     }
 }
 
@@ -241,11 +244,11 @@ function requireRole(array $roles = []): void
 {
     $user = currentUser();
     if (!$user) {
-        redirect('/login');
+        legacyRedirect('/login');
     }
     if ($roles && !in_array($user['role'], $roles, true)) {
         setFlash('error', 'You are not authorized to perform this action.');
-        redirect('/');
+        legacyRedirect('/');
     }
 }
 
@@ -267,19 +270,19 @@ function handleLogin(): void
 
     if ($email === '' || $password === '') {
         setFlash('error', 'Please provide your email and password.');
-        redirect('/login');
+        legacyRedirect('/login');
     }
 
     $user = userRepository()->findByEmail($email);
     if (!$user || !password_verify($password, $user['password_hash'])) {
         setFlash('error', 'Invalid credentials.');
-        redirect('/login');
+        legacyRedirect('/login');
     }
 
     $_SESSION['user_id'] = $user['id'];
     session_regenerate_id(true);
     setFlash('success', 'Welcome back!');
-    redirect('/');
+    legacyRedirect('/');
 }
 
 function handleLogout(): void
@@ -287,7 +290,7 @@ function handleLogout(): void
     unset($_SESSION['user_id']);
     session_regenerate_id(true);
     setFlash('success', 'Signed out successfully.');
-    redirect('/login');
+    legacyRedirect('/login');
 }
 
 function handleInventoryCreate(InventoryRepository $inventory): void
@@ -301,7 +304,7 @@ function handleInventoryCreate(InventoryRepository $inventory): void
         setFlash('error', $e->getMessage());
     }
 
-    redirect('/inventory');
+    legacyRedirect('/inventory');
 }
 
 function handleInventoryUpdate(InventoryRepository $inventory): void
@@ -309,7 +312,7 @@ function handleInventoryUpdate(InventoryRepository $inventory): void
     $originalSku = trim($_POST['original_sku'] ?? '');
     if ($originalSku === '') {
         setFlash('error', 'Missing original SKU.');
-        redirect('/inventory');
+        legacyRedirect('/inventory');
     }
 
     $payload = inventoryPayloadFromRequest();
@@ -321,7 +324,7 @@ function handleInventoryUpdate(InventoryRepository $inventory): void
         setFlash('error', $e->getMessage());
     }
 
-    redirect('/inventory');
+    legacyRedirect('/inventory');
 }
 
 function handleInventoryDelete(InventoryRepository $inventory): void
@@ -329,7 +332,7 @@ function handleInventoryDelete(InventoryRepository $inventory): void
     $sku = trim($_POST['sku'] ?? '');
     if ($sku === '') {
         setFlash('error', 'Missing SKU.');
-        redirect('/inventory');
+        legacyRedirect('/inventory');
     }
 
     try {
@@ -339,21 +342,21 @@ function handleInventoryDelete(InventoryRepository $inventory): void
         setFlash('error', $e->getMessage());
     }
 
-    redirect('/inventory');
+    legacyRedirect('/inventory');
 }
 
 function handleInventoryImport(InventoryRepository $inventory): void
 {
     if (!isset($_FILES['csv']) || $_FILES['csv']['error'] !== UPLOAD_ERR_OK) {
         setFlash('error', 'Please upload a valid CSV file.');
-        redirect('/inventory/import');
+        legacyRedirect('/inventory/import');
     }
 
     $tmp = $_FILES['csv']['tmp_name'];
     $handle = fopen($tmp, 'r');
     if (!$handle) {
         setFlash('error', 'Unable to read uploaded file.');
-        redirect('/inventory/import');
+        legacyRedirect('/inventory/import');
     }
 
     $headers = fgetcsv($handle) ?: [];
@@ -364,7 +367,7 @@ function handleInventoryImport(InventoryRepository $inventory): void
         if (!in_array($field, $normalized, true)) {
             fclose($handle);
             setFlash('error', "Missing required column: {$field}");
-            redirect('/inventory/import');
+            legacyRedirect('/inventory/import');
         }
     }
 
@@ -411,7 +414,7 @@ function handleInventoryImport(InventoryRepository $inventory): void
 
     fclose($handle);
     setFlash('success', "Import complete: {$created} added, {$updated} updated.");
-    redirect('/inventory');
+    legacyRedirect('/inventory');
 }
 
 function exportInventoryCsv(InventoryRepository $inventory): void
@@ -475,7 +478,7 @@ function handleInventoryAdjust(InventoryRepository $inventory): void
         setFlash('error', $e->getMessage());
     }
 
-    redirect('/inventory');
+    legacyRedirect('/inventory');
 }
 
 function handleSaleCreate(SaleService $sales): void
@@ -507,7 +510,7 @@ function handleSaleCreate(SaleService $sales): void
         setFlash('error', $e->getMessage());
     }
 
-    redirect('/sales');
+    legacyRedirect('/sales');
 }
 
 function inventoryPayloadFromRequest(): array
@@ -543,7 +546,7 @@ function handleBookingStatus(): void
 
     if ($bookingId <= 0 || !in_array($status, $allowed, true)) {
         setFlash('error', 'Invalid booking or status.');
-        redirect('/bookings');
+        legacyRedirect('/bookings');
     }
 
     bookingRepository()->updateStatus($bookingId, $status);
@@ -553,7 +556,7 @@ function handleBookingStatus(): void
         notificationService()->notifyBookingStatus($updated);
     }
     setFlash('success', 'Booking updated.');
-    redirect('/bookings');
+    legacyRedirect('/bookings');
 }
 
 function slugify(string $value): string
@@ -567,7 +570,7 @@ function handleStoreProduct(InventoryRepository $inventory): void
 {
     $slug = trim($_GET['slug'] ?? '');
     if ($slug === '') {
-        redirect('/store');
+        legacyRedirect('/store');
     }
     $stmt = Database::connection()->prepare('SELECT * FROM inventory WHERE slug = :slug AND visible_online = 1');
     $stmt->execute([':slug' => $slug]);
@@ -601,7 +604,7 @@ function handleStoreBooking(InventoryRepository $inventory): void
         $payload['customer_phone'] === ''
     ) {
         setFlash('error', 'Please complete all required fields.');
-        redirect('/store');
+        legacyRedirect('/store');
     }
 
     $stmt = Database::connection()->prepare('SELECT id, sku, slug, quantity_on_hand FROM inventory WHERE id = :id AND visible_online = 1');
@@ -609,12 +612,12 @@ function handleStoreBooking(InventoryRepository $inventory): void
     $product = $stmt->fetch();
     if (!$product) {
         setFlash('error', 'Item not found or unavailable.');
-        redirect('/store');
+        legacyRedirect('/store');
     }
 
     if ($payload['quantity'] > (int) $product['quantity_on_hand']) {
         setFlash('error', 'Requested quantity exceeds availability.');
-        redirect('/store/product?slug=' . urlencode($product['slug'] ?: strtolower($product['sku'])));
+        legacyRedirect('/store/product?slug=' . urlencode($product['slug'] ?: strtolower($product['sku'])));
     }
 
     $payload['status'] = 'pending';
@@ -630,5 +633,5 @@ function handleStoreBooking(InventoryRepository $inventory): void
     }
 
     setFlash('success', 'Your booking request has been received. We will confirm shortly.');
-    redirect('/store/product?slug=' . urlencode($product['slug'] ?: strtolower($product['sku'])));
+    legacyRedirect('/store/product?slug=' . urlencode($product['slug'] ?: strtolower($product['sku'])));
 }
