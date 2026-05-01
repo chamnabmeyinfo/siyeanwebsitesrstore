@@ -8,6 +8,7 @@ description: Summarizes each user message into key points and keeps assistant re
 ## Verbatim text from the user
 
 Please Always Report Every Message I chat. Summary the Key Point. I want to focus on Result oriented.
+when you make update or made change to project development code base you have to write ad detail about what you have done and commit and push to git hub automatically
 
 ---
 
@@ -47,6 +48,19 @@ If they ask to “summarize the whole chat” or “everything we said,” then 
 ### 4. Length
 
 Match depth to complexity: small ask → short summary + short result; large task → brief summary + structured result sections.
+
+### 5. Development changes workflow
+
+When project code is changed (feature, bug fix, refactor, docs tied to code changes), always include:
+
+- **Detailed change report** in the final response:
+  - What changed
+  - Why it changed
+  - Which files were changed
+  - Verification performed (tests/checks/manual validation)
+- **Git actions**: commit and push automatically after successful verification.
+- **Commit message quality**: clear and descriptive, focused on intent and outcome.
+- **Result line**: include commit hash and branch pushed.
 
 ---
 
