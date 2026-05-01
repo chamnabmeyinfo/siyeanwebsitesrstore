@@ -7,7 +7,9 @@ use App\Http\Controllers\Auth\RegisteredUserController;
 use App\Http\Controllers\Auth\WebsiteAccountController;
 use App\Http\Controllers\LegacyBridgeController;
 use Illuminate\Foundation\Http\Middleware\ValidateCsrfToken;
+use Illuminate\Session\Middleware\StartSession;
 use Illuminate\Support\Facades\Route;
+use Illuminate\View\Middleware\ShareErrorsFromSession;
 
 Route::middleware('guest')->group(function (): void {
     Route::get('auth/login', [AuthenticatedSessionController::class, 'create'])->name('login');
@@ -25,6 +27,12 @@ Route::middleware('auth')->group(function (): void {
     Route::post('auth/logout', [AuthenticatedSessionController::class, 'destroy'])->name('logout');
 });
 
+// Legacy POS uses PHP native sessions (`$_SESSION['user_id']`). Laravel's StartSession must not run first,
+// or session_start() becomes a no-op and staff login never persists across requests.
 Route::any('/{any?}', [LegacyBridgeController::class, 'handle'])
     ->where('any', '.*')
-    ->withoutMiddleware([ValidateCsrfToken::class]);
+    ->withoutMiddleware([
+        ValidateCsrfToken::class,
+        StartSession::class,
+        ShareErrorsFromSession::class,
+    ]);

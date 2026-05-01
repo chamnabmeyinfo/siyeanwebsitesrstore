@@ -11,6 +11,8 @@ return Application::configure(basePath: dirname(__DIR__))
         health: '/up',
     )
     ->withMiddleware(function (Middleware $middleware): void {
+        // Native PHP session cookie for the legacy POS app (session_start in siyean/public/index.php).
+        $middleware->encryptCookies(except: ['PHPSESSID']);
         // Legacy bridged routes cannot send Laravel CSRF tokens — skip only on that route.
         // Laravel `/auth/*` routes use normal CSRF protection.
         $middleware->alias([
