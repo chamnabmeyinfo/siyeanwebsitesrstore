@@ -151,8 +151,8 @@ final class HttpKernel
                 $this->handleStoreMenuCreate();
                 break;
 
-            case $method === 'POST' && $requestPath === '/settings/store-menu/update':
-                $this->handleStoreMenuUpdate();
+            case $method === 'POST' && $requestPath === '/settings/store-menu/save':
+                $this->handleStoreMenuSave();
                 break;
 
             case $method === 'POST' && $requestPath === '/settings/store-menu/delete':
@@ -233,12 +233,12 @@ final class HttpKernel
         $this->auth->requireRole($this->view, ['admin', 'ecommerce']);
         $label = trim($_POST['label'] ?? '');
         $href = trim($_POST['href'] ?? '');
-        $sortOrder = (int) ($_POST['sort_order'] ?? 0);
         $active = isset($_POST['is_active']);
+        $sortOrder = $this->app->storeMenu->maxSortOrder() + 10;
 
         try {
             $this->app->storeMenu->create($label, $href, $sortOrder, $active);
-            $this->view->flash('success', 'Menu link added.');
+            $this->view->flash('success', 'Added to menu. Drag items to reorder, then click Save menu.');
         } catch (Throwable $e) {
             $this->view->flash('error', $e->getMessage());
         }
@@ -246,23 +246,29 @@ final class HttpKernel
         $this->view->redirect('/settings/store-menu');
     }
 
-    private function handleStoreMenuUpdate(): void
+    private function handleStoreMenuSave(): void
     {
         $this->auth->requireRole($this->view, ['admin', 'ecommerce']);
-        $id = (int) ($_POST['menu_id'] ?? 0);
-        $label = trim($_POST['label'] ?? '');
-        $href = trim($_POST['href'] ?? '');
-        $sortOrder = (int) ($_POST['sort_order'] ?? 0);
-        $active = isset($_POST['is_active']);
+        $orderRaw = trim($_POST['menu_order'] ?? '');
+        $orderedIds = array_filter(array_map('intval', explode(',', $orderRaw)), static fn (int $id) => $id > 0);
 
-        if ($id <= 0) {
-            $this->view->flash('error', 'Invalid menu item.');
-            $this->view->redirect('/settings/store-menu');
+        $itemsPost = $_POST['items'] ?? [];
+        if (!is_array($itemsPost)) {
+            $itemsPost = [];
+        }
+
+        /** @var array<int, array<string, mixed>> $itemsById */
+        $itemsById = [];
+        foreach ($itemsPost as $key => $payload) {
+            if (!is_array($payload)) {
+                continue;
+            }
+            $itemsById[(int) $key] = $payload;
         }
 
         try {
-            $this->app->storeMenu->update($id, $label, $href, $sortOrder, $active);
-            $this->view->flash('success', 'Menu link updated.');
+            $this->app->storeMenu->saveMenuStructure($orderedIds, $itemsById);
+            $this->view->flash('success', 'Menu saved.');
         } catch (Throwable $e) {
             $this->view->flash('error', $e->getMessage());
         }

@@ -107,6 +107,53 @@ final class StoreMenuRepository
         }
     }
 
+    public function maxSortOrder(): int
+    {
+        return (int) $this->db->query('SELECT COALESCE(MAX(sort_order), 0) FROM store_menu_items')->fetchColumn();
+    }
+
+    /**
+     * Replace order and fields for all items in one transaction (WordPress-style “Save menu”).
+     *
+     * @param list<int> $orderedIds IDs top-to-bottom
+     * @param array<int, array{label?:string,href?:string,is_active?:bool|string}> $itemsById
+     */
+    public function saveMenuStructure(array $orderedIds, array $itemsById): void
+    {
+        $existingIds = array_column($this->allForAdmin(), 'id');
+        sort($existingIds);
+
+        $cleanOrder = array_values(array_filter(array_map(static fn ($v) => (int) $v, $orderedIds), static fn (int $id) => $id > 0));
+        $sortedIncoming = $cleanOrder;
+        sort($sortedIncoming);
+
+        if ($existingIds === [] && $sortedIncoming === []) {
+            return;
+        }
+
+        if ($sortedIncoming !== $existingIds || count($cleanOrder) !== count($existingIds)) {
+            throw new InvalidArgumentException('Menu items do not match the server. Refresh the page and try again.');
+        }
+
+        $this->db->beginTransaction();
+        try {
+            foreach ($cleanOrder as $position => $id) {
+                $payload = $itemsById[$id] ?? null;
+                if (!is_array($payload)) {
+                    throw new InvalidArgumentException("Missing fields for menu item #{$id}.");
+                }
+                $label = trim((string) ($payload['label'] ?? ''));
+                $href = trim((string) ($payload['href'] ?? ''));
+                $active = !empty($payload['is_active']);
+                $this->update($id, $label, $href, $position * 10, $active);
+            }
+            $this->db->commit();
+        } catch (\Throwable $e) {
+            $this->db->rollBack();
+            throw $e;
+        }
+    }
+
     private function assertValidLabel(string $label): void
     {
         $t = trim($label);
