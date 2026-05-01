@@ -246,6 +246,7 @@ You don't need to touch `~/public_html` again — it forwards to whatever's in
 | Login form just reloads, no error | Stale Laravel route cache | `cd siyean-laravel && php artisan route:clear && php artisan config:clear && php artisan route:cache && php artisan config:cache` |
 | Plain LiteSpeed 404 page (not Laravel-styled) | `~/public_html` not wired (Step 3 not done or was reverted) | Re-run Step 3 |
 | Stale page after deploy | Cloudflare cache | Cloudflare → Caching → Purge Everything |
+| `Could not open input file: scripts/list_users.php` (or other `scripts/*.php`) | Server clone is older than the commits that add `siyean-laravel/scripts/` | `cd ~/repositories/siyeanwebsitesrstore && git pull` then `ls siyean-laravel/scripts`. Until updated, run the real scripts from `siyean/`: `cd siyean && php scripts/list_users.php` |
 
 Logs to check:
 
