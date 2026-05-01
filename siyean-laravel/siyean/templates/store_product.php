@@ -121,9 +121,19 @@ $primaryMedia = $mediaItems[0] ?? null;
         <?php if ($primaryMedia): ?>
           <div class="media-stage" data-role="media-stage" data-type="<?= htmlspecialchars($primaryMedia['type']) ?>">
             <?php if ($primaryMedia['type'] === 'image'): ?>
-              <div class="media-preview" data-type="image">
-                <img src="<?= htmlspecialchars($primaryMedia['src']) ?>" alt="<?= htmlspecialchars($product['model']) ?>" loading="lazy" />
-                <div class="zoom-pane"></div>
+              <div class="media-preview image-magnifier image-magnifier--product" data-magnifier-zoom="3" data-type="image">
+                <div class="image-magnifier__frame">
+                  <img src="<?= htmlspecialchars($primaryMedia['src']) ?>" alt="<?= htmlspecialchars($product['model']) ?>" loading="lazy" />
+                  <span class="image-magnifier__lens" hidden></span>
+                  <div class="image-magnifier__zoom-ui" aria-label="Magnifier zoom">
+                    <button type="button" data-zoom-step="-0.25" title="Zoom out">−</button>
+                    <span data-zoom-label>3.0×</span>
+                    <button type="button" data-zoom-step="0.25" title="Zoom in">+</button>
+                  </div>
+                </div>
+                <div class="image-magnifier__panel" hidden role="img" aria-label="Magnified product view">
+                  <span class="image-magnifier__panel-fill"></span>
+                </div>
               </div>
             <?php else: ?>
               <?php if ($primaryMedia['embed'] && str_contains($primaryMedia['embed'], 'youtube.com')): ?>
@@ -255,42 +265,36 @@ $primaryMedia = $mediaItems[0] ?? null;
       }
     };
 
-    const attachZoom = (preview) => {
-      if (!preview) return;
-      const img = preview.querySelector('img');
-      const zoom = preview.querySelector('.zoom-pane');
-      if (!img || !zoom) return;
-      preview.addEventListener('mousemove', (e) => {
-        const rect = preview.getBoundingClientRect();
-        const x = ((e.clientX - rect.left) / rect.width) * 100;
-        const y = ((e.clientY - rect.top) / rect.height) * 100;
-        zoom.style.backgroundImage = `url(${img.src})`;
-        zoom.style.backgroundPosition = `${x}% ${y}%`;
-        zoom.style.display = 'block';
-      });
-      preview.addEventListener('mouseenter', () => {
-        zoom.style.backgroundSize = '180%';
-        zoom.style.display = 'block';
-      });
-      preview.addEventListener('mouseleave', () => {
-        zoom.style.display = 'none';
-      });
+    const attachMagnifier = (preview) => {
+      if (!preview || !window.SrMacMagnifier) return;
+      window.SrMacMagnifier.attach(preview, { variant: 'product' });
     };
 
     if (stage.dataset.type === 'image') {
-      attachZoom(stage.querySelector('.media-preview'));
+      attachMagnifier(stage.querySelector('.media-preview'));
     }
 
     const renderMedia = (media) => {
       stage.dataset.type = media.type;
       if (media.type === 'image') {
+        const safeAlt = (media.alt || '').replace(/"/g, '&quot;');
         stage.innerHTML = `
-          <div class="media-preview" data-type="image">
-            <img src="${media.src}" alt="${media.alt}" loading="lazy" />
-            <div class="zoom-pane"></div>
+          <div class="media-preview image-magnifier image-magnifier--product" data-magnifier-zoom="3" data-type="image">
+            <div class="image-magnifier__frame">
+              <img src="${media.src}" alt="${safeAlt}" loading="lazy" />
+              <span class="image-magnifier__lens" hidden></span>
+              <div class="image-magnifier__zoom-ui" aria-label="Magnifier zoom">
+                <button type="button" data-zoom-step="-0.25" title="Zoom out">−</button>
+                <span data-zoom-label>3.0×</span>
+                <button type="button" data-zoom-step="0.25" title="Zoom in">+</button>
+              </div>
+            </div>
+            <div class="image-magnifier__panel" hidden role="img" aria-label="Magnified product view">
+              <span class="image-magnifier__panel-fill"></span>
+            </div>
           </div>
         `;
-        attachZoom(stage.querySelector('.media-preview'));
+        attachMagnifier(stage.querySelector('.media-preview'));
       } else if (media.embed && media.embed.includes('youtube')) {
         stage.innerHTML = `
           <div class="media-video media-video--embed">

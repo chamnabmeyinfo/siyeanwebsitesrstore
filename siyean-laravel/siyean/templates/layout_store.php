@@ -512,9 +512,24 @@ function store_menu_link_attrs(string $href, string $currentPath): string
 
       .media-preview {
         position: relative;
+        width: 100%;
+        height: 100%;
+      }
+
+      .media-preview.image-magnifier {
+        overflow: visible;
+      }
+
+      .media-preview:not(.image-magnifier) {
+        overflow: hidden;
+      }
+
+      .image-magnifier__frame {
+        position: relative;
         overflow: hidden;
         width: 100%;
         height: 100%;
+        border-radius: inherit;
       }
 
       .media-preview img {
@@ -839,6 +854,7 @@ function store_menu_link_attrs(string $href, string $currentPath): string
       }
 
       .product-card {
+        overflow: visible;
         background: var(--surface);
         border-radius: var(--radius-lg);
         padding: 1.25rem;
@@ -905,33 +921,109 @@ function store_menu_link_attrs(string $href, string $currentPath): string
         margin-top: 0.5rem;
       }
 
-      .product-media {
+      .product-media.image-magnifier {
         position: relative;
-        border-radius: var(--radius);
-        overflow: hidden;
         margin-bottom: 0.75rem;
+        overflow: visible;
+      }
+
+      .product-media.image-magnifier .image-magnifier__frame {
+        border-radius: var(--radius);
         border: 1px solid var(--line);
       }
 
-      .product-media img {
+      .product-media.image-magnifier img {
         width: 100%;
         display: block;
         aspect-ratio: 4 / 3;
         object-fit: cover;
       }
 
-      .zoom-pane {
+      /* Advanced magnifier: lens + floating zoom panel */
+      .image-magnifier__lens {
+        position: absolute;
+        box-sizing: border-box;
+        border: 2px solid rgba(255, 255, 255, 0.92);
+        box-shadow:
+          0 0 0 1px rgba(0, 0, 0, 0.12),
+          0 10px 28px rgba(0, 0, 0, 0.22);
+        border-radius: 11px;
+        pointer-events: none;
+        z-index: 3;
+        backdrop-filter: saturate(1.08);
+      }
+
+      .image-magnifier__panel {
+        position: fixed;
+        z-index: 200;
+        pointer-events: none;
+        border-radius: 14px;
+        overflow: hidden;
+        border: 1px solid var(--line-strong);
+        box-shadow:
+          0 20px 50px rgba(12, 18, 34, 0.2),
+          0 0 0 1px rgba(255, 255, 255, 0.5) inset;
+        background: var(--surface);
+      }
+
+      .image-magnifier--card .image-magnifier__panel {
+        width: 176px;
+        height: 176px;
+      }
+
+      .image-magnifier--product .image-magnifier__panel {
+        width: min(310px, 46vw);
+        height: min(310px, 46vw);
+      }
+
+      .image-magnifier__panel-fill {
+        display: block;
+        width: 100%;
+        height: 100%;
+        background-repeat: no-repeat;
+        background-color: #0f172a;
+      }
+
+      .image-magnifier__zoom-ui {
         position: absolute;
         top: 10px;
         right: 10px;
-        width: 100px;
-        height: 100px;
-        border-radius: 10px;
-        border: 1px solid var(--line-strong);
-        background-repeat: no-repeat;
-        background-size: 200%;
-        display: none;
-        box-shadow: var(--shadow-md);
+        z-index: 6;
+        display: flex;
+        align-items: center;
+        gap: 6px;
+        padding: 5px 8px;
+        border-radius: 11px;
+        background: rgba(15, 23, 42, 0.58);
+        backdrop-filter: blur(10px);
+        border: 1px solid rgba(255, 255, 255, 0.12);
+      }
+
+      .image-magnifier__zoom-ui button {
+        width: 30px;
+        height: 30px;
+        border: none;
+        border-radius: 8px;
+        background: rgba(255, 255, 255, 0.14);
+        color: #fff;
+        font-size: 1.05rem;
+        font-weight: 700;
+        line-height: 1;
+        cursor: pointer;
+        font-family: inherit;
+      }
+
+      .image-magnifier__zoom-ui button:hover {
+        background: rgba(255, 255, 255, 0.26);
+      }
+
+      .image-magnifier__zoom-ui [data-zoom-label] {
+        font-size: 0.75rem;
+        font-weight: 700;
+        color: rgba(248, 250, 252, 0.95);
+        min-width: 2.75rem;
+        text-align: center;
+        font-variant-numeric: tabular-nums;
       }
 
       .booking-card {
@@ -1346,6 +1438,7 @@ function store_menu_link_attrs(string $href, string $currentPath): string
     </style>
   </head>
   <body>
+    <script src="/assets/image-magnifier.js"></script>
     <header>
       <div class="main-header">
         <div class="brand">

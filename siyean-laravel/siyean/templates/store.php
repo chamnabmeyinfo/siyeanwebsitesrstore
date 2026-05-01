@@ -202,9 +202,19 @@ $filterLabels = ['All', 'MacBook', 'Desktop', 'Mac', 'Accessory'];
           </div>
           <h3><?= htmlspecialchars($item['model']) ?></h3>
           <p class="sku">SKU <?= htmlspecialchars($item['sku']) ?></p>
-          <div class="product-media" data-full="<?= htmlspecialchars($primary) ?>">
-            <img src="<?= htmlspecialchars($primary) ?>" alt="<?= htmlspecialchars($item['model']) ?>" loading="lazy" />
-            <div class="zoom-pane"></div>
+          <div
+            class="product-media image-magnifier image-magnifier--card"
+            data-magnifier-auto
+            data-magnifier-zoom="2.5"
+            data-full="<?= htmlspecialchars($primary) ?>"
+          >
+            <div class="image-magnifier__frame">
+              <img src="<?= htmlspecialchars($primary) ?>" alt="<?= htmlspecialchars($item['model']) ?>" loading="lazy" />
+              <span class="image-magnifier__lens" hidden></span>
+            </div>
+            <div class="image-magnifier__panel" hidden role="img" aria-label="Magnified view">
+              <span class="image-magnifier__panel-fill"></span>
+            </div>
           </div>
           <?php if ($gallery): ?>
             <div class="gallery-thumbs" role="list">
@@ -260,7 +270,6 @@ $filterLabels = ['All', 'MacBook', 'Desktop', 'Mac', 'Accessory'];
       const media = card.querySelector('.product-media');
       if (!media) return;
       const img = media.querySelector('img');
-      const zoom = media.querySelector('.zoom-pane');
       const thumbs = card.querySelectorAll('.thumb');
 
       thumbs.forEach((btn) => {
@@ -268,24 +277,6 @@ $filterLabels = ['All', 'MacBook', 'Desktop', 'Mac', 'Accessory'];
           img.src = btn.dataset.image;
           media.dataset.full = btn.dataset.image;
         });
-      });
-
-      function moveZoom(e) {
-        const rect = media.getBoundingClientRect();
-        const xPercent = ((e.clientX - rect.left) / rect.width) * 100;
-        const yPercent = ((e.clientY - rect.top) / rect.height) * 100;
-        zoom.style.backgroundImage = `url(${media.dataset.full || img.src})`;
-        zoom.style.backgroundPosition = `${xPercent}% ${yPercent}%`;
-        zoom.style.display = 'block';
-      }
-
-      media.addEventListener('mousemove', moveZoom);
-      media.addEventListener('mouseenter', () => {
-        zoom.style.backgroundSize = '200%';
-        zoom.style.display = 'block';
-      });
-      media.addEventListener('mouseleave', () => {
-        zoom.style.display = 'none';
       });
     });
   })();
