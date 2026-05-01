@@ -10,7 +10,8 @@
   </label>
   <button type="submit">Sign in</button>
   <p style="margin-top:1rem;color:#94a3b8;font-size:0.85rem;">
-    Need access? Ask the store owner to create an account via <code>php scripts/create_user.php</code>.
+    Need access? Use <code>php scripts/create_user.php</code> for a new account, or
+    <code>php scripts/reset_password.php</code> to change an existing user’s password (run on the server).
   </p>
 </form>
 

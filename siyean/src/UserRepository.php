@@ -33,6 +33,27 @@ final class UserRepository
         return (int) $this->db->lastInsertId();
     }
 
+    public function updatePassword(string $email, string $newPassword): bool
+    {
+        if (!filter_var($email, FILTER_VALIDATE_EMAIL)) {
+            throw new InvalidArgumentException('Invalid email address.');
+        }
+        if ($newPassword === '') {
+            throw new InvalidArgumentException('Password cannot be empty.');
+        }
+
+        $hash = password_hash($newPassword, PASSWORD_DEFAULT);
+        $stmt = $this->db->prepare(
+            'UPDATE users SET password_hash = :hash WHERE LOWER(email) = LOWER(:email)'
+        );
+        $stmt->execute([
+            ':hash' => $hash,
+            ':email' => $email,
+        ]);
+
+        return $stmt->rowCount() > 0;
+    }
+
     public function findByEmail(string $email): ?array
     {
         $stmt = $this->db->prepare('SELECT * FROM users WHERE LOWER(email) = LOWER(:email) LIMIT 1');

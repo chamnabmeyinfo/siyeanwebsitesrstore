@@ -42,6 +42,12 @@ This repository ships a PHP 8.2 + SQLite web application for tracking MacBook in
    php scripts/create_user.php --name="Store Owner" --email="owner@example.com" --password="SuperSecure123" --role=admin
    ```
 6. Sign in at http://127.0.0.1:8000/login (admins can invite clerks with `--role=clerk`).
+
+   To reset an existing user’s password (same SQLite DB as login):
+
+   ```
+   php scripts/reset_password.php --email="owner@example.com" --password="NewSecurePassword"
+   ```
 7. Manage online reservations at http://127.0.0.1:8000/bookings (admins/ecommerce managers).
 
 ### Notifications

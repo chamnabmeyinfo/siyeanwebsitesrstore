@@ -77,6 +77,19 @@ sales, customers, bookings, users, store-menu**.
 > Roles available: `admin` (full access incl. delete/import), `clerk`
 > (sales + inventory edit), `ecommerce` (bookings console).
 
+### Reset admin (or any staff) password
+
+SSH into the server, then:
+
+```bash
+cd ~/repositories/siyeanwebsitesrstore/siyean
+php scripts/reset_password.php \
+    --email="owner@srmacshop.com" \
+    --password="<new-strong-password>"
+```
+
+Use the **same email** as the account in `storage/pos.db`. This updates `password_hash` only; it does not create users.
+
 ---
 
 ## Step 2 — Set up the Laravel wrapper (`siyean-laravel/`)
