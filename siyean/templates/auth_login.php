@@ -10,8 +10,9 @@
   </label>
   <button type="submit">Sign in</button>
   <p style="margin-top:1rem;color:#94a3b8;font-size:0.85rem;">
-    Need access? Use <code>php scripts/create_user.php</code> for a new account, or
-    <code>php scripts/reset_password.php</code> to change an existing user’s password (run on the server).
+    Need access? On the server: <code>php scripts/list_users.php</code> shows accounts,
+    <code>php scripts/reset_password.php</code> sets a new password,
+    <code>php scripts/create_user.php</code> adds a user.
   </p>
 </form>
 

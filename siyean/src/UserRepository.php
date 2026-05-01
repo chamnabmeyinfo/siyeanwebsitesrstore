@@ -74,5 +74,17 @@ final class UserRepository
     {
         return (int) $this->db->query('SELECT COUNT(*) FROM users')->fetchColumn();
     }
+
+    /**
+     * @return list<array{id:int|string,name:string,email:string,role:string,created_at:string}>
+     */
+    public function listUsers(): array
+    {
+        $stmt = $this->db->query(
+            'SELECT id, name, email, role, created_at FROM users ORDER BY id ASC'
+        );
+
+        return $stmt->fetchAll(PDO::FETCH_ASSOC);
+    }
 }
 

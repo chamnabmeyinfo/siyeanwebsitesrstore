@@ -61,8 +61,9 @@ chmod 664 storage/pos.db
 php scripts/create_user.php --name="Owner" \
     --email="owner@srmacshop.com" --password="<strong>" --role=admin
 
-# Reset an existing user's password (SSH on server)
-# php scripts/reset_password.php --email="owner@srmacshop.com" --password="<new>"
+# List staff / reset password (SSH on server)
+# php ../siyean/scripts/list_users.php
+# php ../siyean/scripts/reset_password.php --email="owner@srmacshop.com" --password="<new>"
 
 # Laravel wrapper
 cd ../siyean-laravel
@@ -102,7 +103,7 @@ the symlink and forwarder approaches).
 - [ ] `siyean/` has `composer install --no-dev --optimize-autoloader` done
 - [ ] `siyean/storage/pos.db` exists and is writable (664)
 - [ ] At least one admin user created via `siyean/scripts/create_user.php`
-      (or password reset via `siyean/scripts/reset_password.php`)
+      (`siyean/scripts/list_users.php` / `reset_password.php`)
 - [ ] Optional: `siyean/config/app.php` set up (see `app.example.php`) for
       email / Telegram notifications
 - [ ] Laravel `.env` has `APP_ENV=production`, `APP_DEBUG=false`,

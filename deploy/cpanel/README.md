@@ -77,18 +77,23 @@ sales, customers, bookings, users, store-menu**.
 > Roles available: `admin` (full access incl. delete/import), `clerk`
 > (sales + inventory edit), `ecommerce` (bookings console).
 
-### Reset admin (or any staff) password
+### List staff users and reset a password
 
 SSH into the server, then:
 
 ```bash
 cd ~/repositories/siyeanwebsitesrstore/siyean
+
+# See id, name, email, role, created_at (no password data)
+php scripts/list_users.php
+
+# Set a new password for an existing email from the list above
 php scripts/reset_password.php \
     --email="owner@srmacshop.com" \
     --password="<new-strong-password>"
 ```
 
-Use the **same email** as the account in `storage/pos.db`. This updates `password_hash` only; it does not create users.
+`reset_password.php` updates `password_hash` only; it does not create users. For a new account, use `create_user.php`.
 
 ---
 

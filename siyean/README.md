@@ -43,6 +43,12 @@ This repository ships a PHP 8.2 + SQLite web application for tracking MacBook in
    ```
 6. Sign in at http://127.0.0.1:8000/login (admins can invite clerks with `--role=clerk`).
 
+   List existing staff accounts (CSV to the terminal; passwords are never shown):
+
+   ```
+   php scripts/list_users.php
+   ```
+
    To reset an existing user’s password (same SQLite DB as login):
 
    ```
