@@ -39,12 +39,23 @@ final class LegacyBridgeController extends Controller
                 throw $e;
             }
             $location = substr($e->getMessage(), strlen('__LEGACY_REDIRECT__:')) ?: '/';
-            header_remove();
+            // Persist the legacy PHP session BEFORE we discard headers, so the new PHPSESSID
+            // queued by session_regenerate_id() is committed to disk.
+            if (session_status() === PHP_SESSION_ACTIVE) {
+                session_write_close();
+            }
+            // Clear ONLY the Location header set by the legacy app — keep Set-Cookie (PHPSESSID)
+            // and any other native headers so the browser receives the rotated session id.
+            header_remove('Location');
             ob_end_clean();
 
             return redirect($location);
         }
         $content = ob_get_clean();
+
+        if (session_status() === PHP_SESSION_ACTIVE) {
+            session_write_close();
+        }
 
         return response($content ?? '');
     }
