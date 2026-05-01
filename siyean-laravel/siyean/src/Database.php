@@ -145,7 +145,7 @@ final class Database
         }
         $defaults = [
             ['Home', '/', 0],
-            ['Devices', '/#inventory-list', 10],
+            ['Shop Mac', '/#inventory-list', 10],
             ['Sign in', '/login', 20],
         ];
         $stmt = $pdo->prepare(

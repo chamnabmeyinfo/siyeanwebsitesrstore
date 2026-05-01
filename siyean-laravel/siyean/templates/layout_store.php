@@ -45,11 +45,12 @@ function store_menu_link_attrs(string $href, string $currentPath): string
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Mac POS Showroom</title>
+    <meta name="description" content="Shop Mac computers online — MacBook, iMac, Mac mini, Mac Studio, and accessories. Premium inventory with clear pricing and secure booking at SR Mac Shop." />
+    <title>SR Mac Shop — Mac Computers &amp; Accessories</title>
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link
-      href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,400;0,9..40,500;0,9..40,600;0,9..40,700&family=Space+Grotesk:wght@500;600;700&display=swap"
+      href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,400;0,9..40,500;0,9..40,600;0,9..40,700&family=Inter:wght@500;600;700&display=swap"
       rel="stylesheet"
     />
     <style>
@@ -62,17 +63,17 @@ function store_menu_link_attrs(string $href, string $currentPath): string
         --line-strong: rgba(12, 18, 34, 0.12);
         --surface: #ffffff;
         --surface-elevated: #fafbfd;
-        --page: #f3f5f8;
-        --accent: #2563eb;
-        --accent-hover: #1d4ed8;
-        --accent-soft: rgba(37, 99, 235, 0.09);
+        --page: #f5f5f7;
+        --accent: #0071e3;
+        --accent-hover: #0077ed;
+        --accent-soft: rgba(0, 113, 227, 0.1);
         --radius: 1rem;
         --radius-lg: 1.35rem;
         --shadow-xs: 0 1px 2px rgba(12, 18, 34, 0.04);
         --shadow-sm: 0 4px 14px rgba(12, 18, 34, 0.06);
         --shadow-md: 0 12px 32px rgba(12, 18, 34, 0.08);
         --font-body: "DM Sans", -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
-        --font-display: "Space Grotesk", var(--font-body);
+        --font-display: "Inter", -apple-system, BlinkMacSystemFont, var(--font-body);
         font-family: var(--font-body);
         color: var(--ink);
         background: var(--page);
@@ -189,13 +190,13 @@ function store_menu_link_attrs(string $href, string $currentPath): string
       .nav-links a:hover {
         color: var(--accent);
         background: var(--accent-soft);
-        border-color: rgba(37, 99, 235, 0.15);
+        border-color: rgba(0, 113, 227, 0.15);
       }
 
       .nav-links a.active {
         color: var(--accent);
         background: var(--accent-soft);
-        border-color: rgba(37, 99, 235, 0.22);
+        border-color: rgba(0, 113, 227, 0.22);
       }
 
       .nav-menu-btn {
@@ -259,7 +260,7 @@ function store_menu_link_attrs(string $href, string $currentPath): string
         }
 
         .site-nav.is-open .nav-menu-btn {
-          border-color: rgba(37, 99, 235, 0.25);
+          border-color: rgba(0, 113, 227, 0.25);
           color: var(--accent);
           background: var(--accent-soft);
         }
@@ -765,7 +766,7 @@ function store_menu_link_attrs(string $href, string $currentPath): string
 
       .gallery-thumbs button:hover img,
       .gallery-thumbs .thumb:hover img {
-        border-color: rgba(37, 99, 235, 0.35);
+        border-color: rgba(0, 113, 227, 0.35);
       }
 
       .pill-filters {
@@ -849,7 +850,7 @@ function store_menu_link_attrs(string $href, string $currentPath): string
       .product-card:hover {
         transform: translateY(-3px);
         box-shadow: var(--shadow-sm);
-        border-color: rgba(37, 99, 235, 0.15);
+        border-color: rgba(0, 113, 227, 0.15);
       }
 
       .product-card h3 {
@@ -1027,7 +1028,7 @@ function store_menu_link_attrs(string $href, string $currentPath): string
       .form-field input:focus,
       .form-field textarea:focus {
         outline: none;
-        border-color: rgba(37, 99, 235, 0.45);
+        border-color: rgba(0, 113, 227, 0.45);
         box-shadow: 0 0 0 3px var(--accent-soft);
       }
 
@@ -1058,13 +1059,279 @@ function store_menu_link_attrs(string $href, string $currentPath): string
       .form-actions button:hover {
         transform: translateY(-1px);
         background: var(--accent-hover);
-        box-shadow: 0 12px 28px rgba(37, 99, 235, 0.28);
+        box-shadow: 0 12px 28px rgba(0, 113, 227, 0.28);
       }
 
       .form-actions small {
         color: var(--muted);
         font-size: 0.8125rem;
         text-align: center;
+      }
+
+      /* —— Ecommerce Mac storefront (home / catalog) —— */
+      .eco-hero {
+        position: relative;
+      }
+
+      .eco-hero__bg {
+        position: absolute;
+        inset: 0;
+        background:
+          radial-gradient(ellipse 80% 60% at 20% 0%, rgba(0, 113, 227, 0.28), transparent 55%),
+          radial-gradient(ellipse 50% 45% at 95% 90%, rgba(88, 86, 214, 0.15), transparent 50%);
+        pointer-events: none;
+      }
+
+      .eco-hero__content {
+        position: relative;
+        z-index: 1;
+      }
+
+      .eco-hero__eyebrow {
+        letter-spacing: 0.08em;
+      }
+
+      .eco-hero__lead {
+        margin: 0;
+        color: rgba(226, 232, 240, 0.88);
+        font-size: 1.02rem;
+        line-height: 1.65;
+        max-width: 38ch;
+      }
+
+      .eco-hero__actions {
+        margin-top: 1.15rem;
+      }
+
+      .eco-hero__fineprint {
+        margin: 1.25rem 0 0;
+        font-size: 0.8125rem;
+        color: rgba(148, 163, 184, 0.95);
+      }
+
+      .eco-hero__fineprint a {
+        color: #93c5fd;
+        font-weight: 600;
+      }
+
+      .eco-btn {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        padding: 0.72rem 1.35rem;
+        border-radius: 980px;
+        font-weight: 600;
+        font-size: 0.9375rem;
+        text-decoration: none;
+        transition: transform 0.15s ease, box-shadow 0.15s ease, background 0.15s ease;
+      }
+
+      .eco-btn--primary {
+        background: #fff;
+        color: #1d1d1f;
+        box-shadow: 0 4px 16px rgba(0, 0, 0, 0.18);
+      }
+
+      .eco-btn--primary:hover {
+        transform: translateY(-1px);
+        box-shadow: 0 8px 24px rgba(0, 0, 0, 0.22);
+      }
+
+      .eco-btn--ghost {
+        background: rgba(255, 255, 255, 0.08);
+        border: 1px solid rgba(255, 255, 255, 0.22);
+        color: #f1f5f9;
+      }
+
+      .eco-btn--ghost:hover {
+        background: rgba(255, 255, 255, 0.14);
+        transform: translateY(-1px);
+      }
+
+      .eco-hero__media {
+        position: relative;
+        z-index: 1;
+      }
+
+      .eco-trust {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+        gap: 1rem;
+        margin: 0 0 2rem;
+      }
+
+      .eco-trust__item {
+        background: var(--surface);
+        border: 1px solid var(--line);
+        border-radius: var(--radius-lg);
+        padding: 1.1rem 1.25rem;
+        box-shadow: var(--shadow-xs);
+      }
+
+      .eco-trust__item strong {
+        display: block;
+        font-size: 0.9375rem;
+        margin-bottom: 0.35rem;
+        font-family: var(--font-display);
+      }
+
+      .eco-trust__item span {
+        font-size: 0.8125rem;
+        color: var(--muted);
+        line-height: 1.45;
+      }
+
+      .eco-featured-copy {
+        color: var(--ink-soft);
+        font-size: 0.9375rem;
+        line-height: 1.55;
+        margin: 0.5rem 0 0;
+        flex-grow: 1;
+      }
+
+      .eco-price-block {
+        margin: 1rem 0 0;
+        padding-top: 1rem;
+        border-top: 1px solid var(--line);
+      }
+
+      .eco-price {
+        font-family: var(--font-display);
+        font-size: clamp(1.5rem, 3vw, 1.85rem);
+        font-weight: 700;
+        letter-spacing: -0.03em;
+      }
+
+      .eco-price-was {
+        display: block;
+        font-size: 0.8125rem;
+        color: var(--muted);
+        text-decoration: line-through;
+        margin-top: 0.25rem;
+      }
+
+      .eco-featured-gallery .gallery-thumbs img {
+        width: 64px;
+        height: 64px;
+      }
+
+      .eco-featured-single {
+        width: 100%;
+        border-radius: var(--radius);
+        border: 1px solid var(--line);
+        margin-top: 0.75rem;
+        object-fit: cover;
+        aspect-ratio: 16 / 10;
+      }
+
+      .eco-value {
+        margin: 2.5rem 0;
+        padding: clamp(1.5rem, 4vw, 2.25rem);
+        background: var(--surface);
+        border: 1px solid var(--line);
+        border-radius: calc(var(--radius-lg) + 4px);
+        box-shadow: var(--shadow-xs);
+      }
+
+      .eco-value h2 {
+        margin: 0 0 0.5rem;
+        font-size: clamp(1.35rem, 3vw, 1.65rem);
+      }
+
+      .eco-value__intro {
+        margin: 0 0 1.25rem;
+        color: var(--muted);
+        max-width: 52ch;
+        font-size: 0.9375rem;
+      }
+
+      .eco-value__grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+        gap: 1rem;
+      }
+
+      .eco-value__card {
+        padding: 1.1rem 1.2rem;
+        border-radius: var(--radius);
+        background: var(--surface-elevated);
+        border: 1px solid var(--line);
+      }
+
+      .eco-value__card h3 {
+        margin: 0 0 0.45rem;
+        font-size: 1rem;
+      }
+
+      .eco-value__card p {
+        margin: 0;
+        color: var(--muted);
+        font-size: 0.875rem;
+        line-height: 1.55;
+      }
+
+      .eco-catalog__head {
+        margin-bottom: 1.25rem;
+      }
+
+      .eco-catalog__title {
+        margin: 0 0 0.35rem;
+        font-size: clamp(1.35rem, 3vw, 1.75rem);
+      }
+
+      .eco-catalog__subtitle {
+        margin: 0;
+        color: var(--muted);
+        font-size: 0.9375rem;
+      }
+
+      .eco-filters .pill {
+        cursor: pointer;
+        font-family: inherit;
+        transition: border-color 0.15s ease, background 0.15s ease, color 0.15s ease;
+      }
+
+      .eco-filters .pill.is-active {
+        border-color: rgba(0, 113, 227, 0.35);
+        background: var(--accent-soft);
+        color: var(--accent);
+      }
+
+      .eco-filters .pill:hover:not(.is-active) {
+        border-color: var(--line-strong);
+      }
+
+      .eco-save {
+        color: #047857;
+        font-weight: 600;
+        font-size: 0.8125rem;
+      }
+
+      .eco-was {
+        text-decoration: line-through;
+        font-size: 0.8125rem !important;
+      }
+
+      .eco-price-row .eco-cta-solid {
+        white-space: nowrap;
+      }
+
+      .eco-cta-solid {
+        background: var(--accent) !important;
+        color: #fff !important;
+        border: none !important;
+        border-radius: 980px;
+        padding: 0.55rem 1.2rem !important;
+      }
+
+      .eco-cta-solid:hover {
+        background: var(--accent-hover) !important;
+        color: #fff !important;
+      }
+
+      .eco-empty {
+        text-align: center;
+        padding: 2.5rem 1.5rem !important;
       }
 
       footer {
@@ -1087,7 +1354,7 @@ function store_menu_link_attrs(string $href, string $currentPath): string
           </div>
           <div>
             <h1>SR Mac Shop</h1>
-            <p class="brand-tagline">Premier Mac Studio &amp; Concierge</p>
+            <p class="brand-tagline">Online Mac store · Pickup &amp; concierge</p>
           </div>
         </div>
         <nav class="site-nav" id="site-nav" aria-label="Shop">
@@ -1115,7 +1382,7 @@ function store_menu_link_attrs(string $href, string $currentPath): string
       <?php include $view; ?>
     </main>
     <footer>
-      &copy; <?= date('Y') ?> Mac POS — Boutique Mac &amp; PC Retail
+      &copy; <?= date('Y') ?> SR Mac Shop — Apple computers &amp; accessories. MacBook, iMac, Mac mini &amp; more.
     </footer>
     <div class="login-launcher" aria-hidden="true">
       <span>Staff access</span>
