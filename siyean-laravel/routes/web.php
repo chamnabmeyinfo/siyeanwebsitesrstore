@@ -1,13 +1,7 @@
 <?php
 
-use App\Http\Controllers\PageController;
+use App\Http\Controllers\LegacyBridgeController;
 use Illuminate\Support\Facades\Route;
 
-Route::get('/', function () {
-    return view('welcome');
-});
-
-Route::get('/p/{page}', [PageController::class, 'display'])
-    ->name('pages.display');
-
-Route::resource('pages', PageController::class);
+Route::any('/{any?}', [LegacyBridgeController::class, 'handle'])
+    ->where('any', '.*');
