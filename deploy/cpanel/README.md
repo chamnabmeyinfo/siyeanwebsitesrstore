@@ -1,54 +1,96 @@
 # cPanel Deployment — Quick Setup
 
-This guide assumes the repo is cloned at:
+Repo layout assumed (matches cPanel *Git Version Control* default):
 
 ```
-/home/<cpanel-user>/repositories/siyeanwebsitesrstore/
+/home/<user>/repositories/siyeanwebsitesrstore/
+    siyean/                 ← legacy SR Mac Shop POS app (PHP + SQLite, no framework)
+    siyean-laravel/         ← Laravel 12 wrapper that bridges into ../siyean/
+    deploy/cpanel/          ← these deployment files
 ```
 
-(which is the default location used by cPanel's *Git Version Control*
-feature). The Laravel app is therefore at:
+The goal: serve `srmacshop.com` from this repo via `~/public_html`.
+
+The runtime chain on the server:
 
 ```
-/home/<cpanel-user>/repositories/siyeanwebsitesrstore/siyean-laravel/
+Browser  →  Cloudflare  →  LiteSpeed  →  ~/public_html/  →  siyean-laravel/public/index.php
+                                                              ↓
+                                                          LegacyBridgeController
+                                                              ↓
+                                                      siyean/public/index.php  (the actual app)
 ```
-
-The goal: serve `srmacshop.com` from this Laravel app via `~/public_html`.
 
 ---
 
-## Prerequisites (one-time, in cPanel UI)
+## Prerequisites (in cPanel UI)
 
 1. **PHP 8.2+** — *MultiPHP Manager* → set `srmacshop.com` to PHP 8.2 or 8.3.
-2. **Database** — pick one:
-   - **SQLite** (zero config — recommended for first launch). Nothing to do
-     in the cPanel UI.
-   - **MySQL** — *MySQL Databases* → create database `<user>_srmacshop`,
-     create a DB user, attach with **ALL PRIVILEGES**. Note the prefixed
-     names cPanel assigns.
-3. **HTTPS** — *SSL/TLS Status* → run **AutoSSL** for `srmacshop.com` (do
-   this after the site is up, but before going live to the public).
+   Required PHP extensions (almost always on by default): `pdo`, `pdo_sqlite`
+   (legacy app uses SQLite), `pdo_mysql` (Laravel uses MySQL), `mbstring`,
+   `openssl`, `tokenizer`, `xml`, `ctype`, `fileinfo`, `bcmath`.
+2. **MySQL database for Laravel** — *MySQL Databases* → create
+   `<user>_srmacshop` DB + matching user with **ALL PRIVILEGES**. (The
+   legacy app does NOT need MySQL — it uses SQLite at
+   `siyean/storage/pos.db`.)
+3. **HTTPS** — *SSL/TLS Status* → run **AutoSSL** for `srmacshop.com` (after
+   Step 3 below). If using Cloudflare, set SSL/TLS mode = **Full (strict)**.
 
 ---
 
-## Step 1 — Configure the Laravel app
+## Step 1 — Set up the legacy SR Mac Shop app (`siyean/`)
 
-Open cPanel **Terminal** (or SSH in) and run:
+In cPanel **Terminal**:
+
+```bash
+cd ~/repositories/siyeanwebsitesrstore/siyean
+
+# Install vendor/ for the legacy app (it has its own composer.json)
+composer install --no-dev --optimize-autoloader
+
+# Create the SQLite database file the app expects
+mkdir -p storage
+touch  storage/pos.db
+chmod 775 storage
+chmod 664 storage/pos.db
+
+# (Optional) custom config — only needed for email / Telegram notifications
+cp config/app.example.php config/app.php
+nano config/app.php
+
+# Create your first admin account
+php scripts/create_user.php \
+    --name="Owner" \
+    --email="owner@srmacshop.com" \
+    --password="<a-strong-password>" \
+    --role=admin
+
+# (Optional) seed sample inventory + demo data so the storefront isn't empty
+php scripts/seed_inventory.php
+# OR for a fuller demo dataset:
+php scripts/seed_demo_data.php
+```
+
+After this, `siyean/storage/pos.db` is the source of truth for **products,
+sales, customers, bookings, users, store-menu**.
+
+> Roles available: `admin` (full access incl. delete/import), `clerk`
+> (sales + inventory edit), `ecommerce` (bookings console).
+
+---
+
+## Step 2 — Set up the Laravel wrapper (`siyean-laravel/`)
 
 ```bash
 cd ~/repositories/siyeanwebsitesrstore/siyean-laravel
 
-# Install PHP dependencies for production
 composer install --no-dev --optimize-autoloader
 
-# Create the .env file
 cp .env.example .env
-
-# Generate the application encryption key
 php artisan key:generate
 ```
 
-Edit `.env` (use the cPanel File Manager or `nano .env`):
+Edit `.env` for production. Minimal block:
 
 ```dotenv
 APP_NAME="SR Mac Shop"
@@ -57,157 +99,136 @@ APP_DEBUG=false
 APP_URL=https://srmacshop.com
 
 LOG_CHANNEL=stack
-LOG_LEVEL=warning
+LOG_LEVEL=error
 
-# --- pick ONE database block ---
+DB_CONNECTION=mysql
+DB_HOST=localhost
+DB_PORT=3306
+DB_DATABASE=<user>_srmacshop
+DB_USERNAME=<user>_srmacshop
+DB_PASSWORD=<the-password-you-set>
 
-# SQLite (simplest — file lives at database/database.sqlite)
-DB_CONNECTION=sqlite
-
-# OR MySQL
-# DB_CONNECTION=mysql
-# DB_HOST=127.0.0.1
-# DB_PORT=3306
-# DB_DATABASE=<cpanel-user>_srmacshop
-# DB_USERNAME=<cpanel-user>_srmacshop
-# DB_PASSWORD=<the-password-you-set>
-
-SESSION_DRIVER=database
-CACHE_STORE=database
-QUEUE_CONNECTION=database
+SESSION_DRIVER=file
+CACHE_STORE=file
+QUEUE_CONNECTION=sync
 ```
 
-Then initialise the database and caches:
+Then:
 
 ```bash
-# If using SQLite, create the file
-touch database/database.sqlite
-
-php artisan migrate --force
+php artisan migrate --force        # creates Laravel's own users/cache/jobs tables
 php artisan storage:link
 php artisan config:cache
 php artisan route:cache
 php artisan view:cache
 
-# Permissions Apache needs (cPanel runs PHP as your user, so 775 is fine)
 chmod -R 775 storage bootstrap/cache
 ```
 
+Important: **after editing `.env` ever again**, run `php artisan
+config:clear && php artisan config:cache`.
+
 ---
 
-## Step 2 — Wire `public_html` to Laravel's `public/`
+## Step 3 — Wire `public_html` to Laravel's `public/`
 
-Pick **Approach A** if your host allows replacing `public_html` (most do).
-Otherwise use **Approach B**.
+Try **Approach A** first. If LiteSpeed refuses to follow the symlinked
+docroot (you'll get a 404 from LiteSpeed at `/`), use **Approach B**.
 
-### Approach A — Symlink (recommended, cleanest)
+### Approach A — Symlink (cleanest)
 
 ```bash
-# Back up whatever is currently in public_html, then replace it with a
-# symlink to Laravel's public/ folder.
-mv ~/public_html ~/public_html.backup.$(date +%s)
+mv ~/public_html ~/public_html.backup.$(date +%s) 2>/dev/null
 ln -s ~/repositories/siyeanwebsitesrstore/siyean-laravel/public ~/public_html
+ls -l ~/public_html
 ```
 
-That's it. Apache will now serve Laravel directly. The `public/.htaccess`
-already in the repo handles all routing.
+If `ls -l` shows the symlink and `curl -sI https://srmacshop.com/` returns
+`HTTP/2 200`, you're done.
 
-If `ls -l ~/public_html` shows `public_html -> ... /siyean-laravel/public`
-you're done — go to **Step 3**.
-
-> If your host blocks this (some hosts auto-recreate `public_html` or refuse
-> to follow symlinks for the document root), use Approach B instead.
-
-### Approach B — Forwarder (works on every host)
+### Approach B — Forwarder (works everywhere, including LiteSpeed-strict)
 
 ```bash
-# Empty public_html (back up first if it has anything you want to keep)
-mv ~/public_html ~/public_html.backup.$(date +%s)
+rm -f ~/public_html
 mkdir ~/public_html
 
-# Drop in the forwarder files from this repo
-cp ~/repositories/siyeanwebsitesrstore/deploy/cpanel/public_html/index.php   ~/public_html/
-cp ~/repositories/siyeanwebsitesrstore/deploy/cpanel/public_html/.htaccess   ~/public_html/
+# Forwarder index.php + .htaccess from this repo
+cp ~/repositories/siyeanwebsitesrstore/deploy/cpanel/public_html/index.php ~/public_html/
+cp ~/repositories/siyeanwebsitesrstore/deploy/cpanel/public_html/.htaccess ~/public_html/
 
-# Make Apache-served static asset folders reachable from public_html
-ln -s ~/repositories/siyeanwebsitesrstore/siyean-laravel/public/build    ~/public_html/build
-ln -s ~/repositories/siyeanwebsitesrstore/siyean-laravel/public/storage  ~/public_html/storage
-cp    ~/repositories/siyeanwebsitesrstore/siyean-laravel/public/favicon.ico ~/public_html/
-cp    ~/repositories/siyeanwebsitesrstore/siyean-laravel/public/robots.txt  ~/public_html/
+# Static asset folders (single-hop symlinks; LiteSpeed handles these)
+ln -s ~/repositories/siyeanwebsitesrstore/siyean-laravel/public/build ~/public_html/build
+
+# storage/ → straight to the actual files (skip the Laravel-internal hop)
+ln -s ~/repositories/siyeanwebsitesrstore/siyean-laravel/storage/app/public ~/public_html/storage
+
+# Static files served directly
+cp ~/repositories/siyeanwebsitesrstore/siyean-laravel/public/favicon.ico ~/public_html/
+cp ~/repositories/siyeanwebsitesrstore/siyean-laravel/public/robots.txt  ~/public_html/
+
+# The legacy app keeps its branding under siyean/public/assets — make those
+# reachable directly so <img src="/assets/sr-mac-logo.svg"> just works.
+ln -s ~/repositories/siyeanwebsitesrstore/siyean/public/assets ~/public_html/assets
+
+ls -la ~/public_html
 ```
 
-If your host blocks symlinks entirely, replace the two `ln -s` lines with
-`cp -R ...` — but then you must repeat the `cp -R` after every front-end
-build.
+---
+
+## Step 4 — Verify
+
+```bash
+curl -sI https://srmacshop.com/ | head -5            # expect HTTP/2 200
+curl -s  https://srmacshop.com/ | head -20           # expect storefront HTML
+curl -sI https://srmacshop.com/store | head -3       # expect HTTP/2 200
+curl -sI https://srmacshop.com/login | head -3       # expect HTTP/2 200
+```
+
+In a browser:
+- `https://srmacshop.com/` — public storefront (SR Mac Shop)
+- `https://srmacshop.com/login` — staff sign-in (use the admin user from Step 1)
+- After login: `/dashboard`, `/inventory`, `/sales`, `/sales/new`,
+  `/bookings`, `/inventory/import`, `/inventory/export`
 
 ---
 
-## Step 3 — Verify
-
-Visit `https://srmacshop.com` (or `http://` if HTTPS isn't on yet).
-
-You should see the **Laravel welcome page**.
-
-If you get a blank page or HTTP 500:
-
-1. Check the log: `tail -100 ~/repositories/siyeanwebsitesrstore/siyean-laravel/storage/logs/laravel.log`
-2. Temporarily set `APP_DEBUG=true` in `.env`, hit the page, read the
-   error, then set it back to `false`.
-3. Re-check permissions: `chmod -R 775 ~/repositories/siyeanwebsitesrstore/siyean-laravel/storage ~/repositories/siyeanwebsitesrstore/siyean-laravel/bootstrap/cache`
-
-Common errors and fixes are in the main
-[`siyean-laravel/README.md` Troubleshooting section](../../siyean-laravel/README.md#troubleshooting).
-
----
-
-## Step 4 — Updating after future `git push`
+## Step 5 — Updates after a future `git push`
 
 ```bash
 cd ~/repositories/siyeanwebsitesrstore
 git pull
+
+# Reinstall vendors only if composer.json/.lock changed
+[ -d siyean/vendor ]         || (cd siyean         && composer install --no-dev --optimize-autoloader)
+[ -d siyean-laravel/vendor ] || (cd siyean-laravel && composer install --no-dev --optimize-autoloader)
+
 cd siyean-laravel
-composer install --no-dev --optimize-autoloader
 php artisan migrate --force
 php artisan config:cache
 php artisan route:cache
 php artisan view:cache
 ```
 
-If you used Approach A (symlink), no further action is needed. If you used
-Approach B (forwarder), no further action is needed either — only re-copy
-the forwarder files if `deploy/cpanel/public_html/` itself changes (it
-rarely does).
+You don't need to touch `~/public_html` again — it forwards to whatever's in
+`siyean-laravel/public/`, which forwards to `siyean/`.
 
 ---
 
-## Front-end assets (Vite)
+## Troubleshooting
 
-`public/build/` is in `.gitignore`. If you add or change anything in
-`resources/css` or `resources/js`, build assets and upload `public/build/`:
+| Symptom | Likely cause | Fix |
+|---|---|---|
+| `HTTP 500 / Legacy application entrypoint not found.` | `siyean/` folder missing or wrong path | `ls -la ~/repositories/siyeanwebsitesrstore/siyean/public/index.php` should exist |
+| `HTTP 500 / Class "App\Database" not found` | `siyean/vendor/` not installed | `cd siyean && composer install --no-dev --optimize-autoloader` |
+| `HTTP 500 / unable to open database file` | `siyean/storage/pos.db` missing or not writable | `mkdir -p siyean/storage && touch siyean/storage/pos.db && chmod 775 siyean/storage && chmod 664 siyean/storage/pos.db` |
+| Storefront loads but no images / `/assets/sr-mac-logo.svg` 404 | Approach B without the `assets` symlink | `ln -s ~/repositories/siyeanwebsitesrstore/siyean/public/assets ~/public_html/assets` |
+| Login form just reloads, no error | Stale Laravel route cache | `cd siyean-laravel && php artisan route:clear && php artisan config:clear && php artisan route:cache && php artisan config:cache` |
+| Plain LiteSpeed 404 page (not Laravel-styled) | `~/public_html` not wired (Step 3 not done or was reverted) | Re-run Step 3 |
+| Stale page after deploy | Cloudflare cache | Cloudflare → Caching → Purge Everything |
+
+Logs to check:
 
 ```bash
-# Locally on your dev machine:
-cd siyean-laravel
-npm ci
-npm run build
-# Then upload siyean-laravel/public/build/ to the server (rsync, SFTP, etc.)
+tail -50 ~/repositories/siyeanwebsitesrstore/siyean-laravel/storage/logs/laravel.log
+ls ~/logs/                              # cPanel domain access/error logs
 ```
-
-If your cPanel host has Node.js available, you can build on the server
-instead.
-
----
-
-## Production checklist
-
-- [ ] `APP_ENV=production`, `APP_DEBUG=false` in `.env`
-- [ ] `APP_URL=https://srmacshop.com` (with the real scheme)
-- [ ] `APP_KEY` generated
-- [ ] `php artisan migrate --force` succeeded
-- [ ] `php artisan storage:link` succeeded
-- [ ] `config:cache`, `route:cache`, `view:cache` run
-- [ ] `storage/`, `bootstrap/cache/` are 775 and owned by you
-- [ ] `https://srmacshop.com` returns the welcome page (HTTP 200)
-- [ ] AutoSSL active in cPanel
-- [ ] `~/repositories/siyeanwebsitesrstore/siyean-laravel/.env` is **not**
-      web-accessible (it isn't — it's outside `public_html`)

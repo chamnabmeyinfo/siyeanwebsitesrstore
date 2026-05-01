@@ -1,220 +1,109 @@
-# SR Mac Shop — Laravel Application
+# SR Mac Shop — Application
 
-A Laravel 12 application for SR Mac Shop. PHP 8.2+ required.
+This repository contains two pieces:
+
+1. **`../siyean/`** — the SR Mac Shop POS / storefront / bookings application.
+   Plain PHP 8.2 + SQLite, no framework. This is the actual product.
+2. **`./` (this folder, `siyean-laravel/`)** — a Laravel 12 wrapper. Every
+   inbound HTTP request is forwarded into `../siyean/public/index.php` by
+   `app/Http/Controllers/LegacyBridgeController`. Laravel handles routing,
+   middleware, errors, asset pipeline, and future framework-based features.
 
 ## Local Development
 
 ```bash
+# 1. Install dependencies for both apps
+cd siyean
+composer install
+cd ../siyean-laravel
 composer install
 cp .env.example .env
 php artisan key:generate
-touch database/database.sqlite        # macOS / Linux
-# (Windows PowerShell)  New-Item database/database.sqlite -ItemType File
-php artisan migrate
-npm install
-npm run dev                           # in a second terminal, optional (Vite)
-php artisan serve                     # http://127.0.0.1:8000
+
+# 2. Initialise the legacy app's SQLite database
+mkdir -p ../siyean/storage
+touch ../siyean/storage/pos.db
+
+# 3. Create at least one admin user
+php ../siyean/scripts/create_user.php \
+    --name="Owner" --email="owner@example.com" \
+    --password="ChangeMe123!" --role=admin
+
+# 4. (Optional) seed sample inventory
+php ../siyean/scripts/seed_inventory.php
+
+# 5. Start the dev server
+php artisan serve
+# Visit http://127.0.0.1:8000/         (public storefront)
+#       http://127.0.0.1:8000/login    (staff login)
 ```
+
+See `../siyean/README.md` for the full feature list and CLI scripts.
 
 ## Deploying to cPanel
 
-This guide assumes a typical cPanel shared host with PHP 8.2+, Composer access
-(via SSH or Terminal), and either MySQL/MariaDB or SQLite available.
+End-to-end runbook: [`../deploy/cpanel/README.md`](../deploy/cpanel/README.md).
 
-### 1. Verify the host
-
-In cPanel **MultiPHP Manager**, set the domain's PHP version to **8.2 or
-higher**. Required PHP extensions (almost always enabled by default on cPanel):
-
-- `bcmath`, `ctype`, `curl`, `dom`, `fileinfo`, `mbstring`, `openssl`, `pdo`,
-  `tokenizer`, `xml`, plus `pdo_mysql` (if using MySQL) or `pdo_sqlite`.
-
-### 2. Upload the code
-
-Pick **one** of the two recommended layouts.
-
-#### Option A (recommended) — Project outside `public_html`
-
-```
-/home/<cpanel-user>/
-├── srmacshop/                  ← clone repo here (siyean-laravel/ is inside)
-└── public_html/                ← Apache document root for your domain
-```
-
-Steps via SSH:
+Short version of what the server needs:
 
 ```bash
-cd ~
-git clone https://github.com/chamnabmeyinfo/siyeanwebsitesrstore.git srmacshop
-cd srmacshop/siyean-laravel
+cd ~/repositories/siyeanwebsitesrstore
+
+# Legacy app
+cd siyean
 composer install --no-dev --optimize-autoloader
-```
+mkdir -p storage
+touch  storage/pos.db
+chmod 775 storage
+chmod 664 storage/pos.db
 
-Then point the domain at Laravel's `public/` folder. Two equally valid ways:
+# Create admin user (one-off)
+php scripts/create_user.php --name="Owner" \
+    --email="owner@srmacshop.com" --password="<strong>" --role=admin
 
-1. **Change the document root** (cPanel → *Domains* → edit your domain →
-   document root = `srmacshop/siyean-laravel/public`). This is the cleanest
-   approach when the host allows it.
-
-2. **If you cannot change the document root**, replace the contents of
-   `~/public_html` with a small bootstrap that delegates to Laravel:
-
-   `~/public_html/index.php`:
-
-   ```php
-   <?php
-   require __DIR__ . '/../srmacshop/siyean-laravel/public/index.php';
-   ```
-
-   `~/public_html/.htaccess` (copy from `siyean-laravel/public/.htaccess`):
-
-   ```apache
-   <IfModule mod_rewrite.c>
-       <IfModule mod_negotiation.c>
-           Options -MultiViews -Indexes
-       </IfModule>
-       RewriteEngine On
-       RewriteCond %{HTTP:Authorization} .
-       RewriteRule .* - [E=HTTP_AUTHORIZATION:%{HTTP:Authorization}]
-       RewriteCond %{REQUEST_FILENAME} !-d
-       RewriteCond %{REQUEST_FILENAME} !-f
-       RewriteRule ^ index.php [L]
-   </IfModule>
-   ```
-
-   Then symlink Laravel's `public/build` and `public/storage` (and any other
-   static asset folders) into `public_html` so Apache can serve them directly.
-
-#### Option B — Everything inside `public_html` (only if you have no other choice)
-
-Upload `siyean-laravel/` *contents* into `~/public_html`. This exposes
-`vendor/`, `.env`, `storage/`, etc. to the web. You **must** keep the existing
-`public/.htaccess` and add a top-level `.htaccess` that blocks access to
-everything except `public/`. Option A is strongly preferred.
-
-### 3. Configure the environment
-
-Create `siyean-laravel/.env` (do **not** commit it). Start from `.env.example`:
-
-```bash
-cp .env.example .env
+# Laravel wrapper
+cd ../siyean-laravel
+composer install --no-dev --optimize-autoloader
+cp .env.example .env       # then edit .env (APP_ENV, DB, etc.)
 php artisan key:generate
-```
-
-Then edit `.env` for production:
-
-```dotenv
-APP_NAME="SR Mac Shop"
-APP_ENV=production
-APP_DEBUG=false
-APP_URL=https://srmacshop.com
-
-LOG_CHANNEL=stack
-LOG_LEVEL=warning
-
-# --- Database: pick ONE block ---
-
-# MySQL / MariaDB (typical on cPanel)
-DB_CONNECTION=mysql
-DB_HOST=127.0.0.1
-DB_PORT=3306
-DB_DATABASE=cpaneluser_srmacshop
-DB_USERNAME=cpaneluser_srmacshop
-DB_PASSWORD=<strong-password>
-
-# OR SQLite (file-based, no MySQL needed)
-# DB_CONNECTION=sqlite
-# DB_DATABASE=/home/<cpanel-user>/srmacshop/siyean-laravel/database/database.sqlite
-
-SESSION_DRIVER=database
-CACHE_STORE=database
-QUEUE_CONNECTION=database
-```
-
-For MySQL: create the DB and user in cPanel → *MySQL Databases*, attach the
-user with **ALL PRIVILEGES**, and use the prefixed name cPanel assigns.
-
-### 4. Initialise the application
-
-```bash
-cd ~/srmacshop/siyean-laravel
 php artisan migrate --force
 php artisan storage:link
 php artisan config:cache
 php artisan route:cache
 php artisan view:cache
+chmod -R 775 storage bootstrap/cache
 ```
 
-### 5. File permissions
+Wire `~/public_html` to Laravel's `public/` once (see deploy guide for both
+the symlink and forwarder approaches).
 
-Apache (run as the cPanel user on shared hosting) must be able to write to
-`storage/` and `bootstrap/cache/`:
+## How the bridge works
 
-```bash
-find storage bootstrap/cache -type d -exec chmod 775 {} \;
-find storage bootstrap/cache -type f -exec chmod 664 {} \;
-```
-
-If using SQLite, ensure both the `database/` directory and the `.sqlite` file
-are writable (`chmod 775 database` and `chmod 664 database/database.sqlite`).
-
-### 6. Build front-end assets
-
-Vite assets (`public/build/`) are not committed. Build them locally and upload
-`public/build/` to the server, **or** run on the server if Node.js is
-available:
-
-```bash
-npm ci
-npm run build
-```
-
-### 7. Schedule + queues (only if you start using them)
-
-cPanel → *Cron Jobs*, run every minute:
-
-```
-* * * * * cd /home/<cpanel-user>/srmacshop/siyean-laravel && php artisan schedule:run >> /dev/null 2>&1
-```
-
-For background queues, set up a Supervisor-like process or use cPanel's
-"Application Manager" / a cron-backed `queue:work --stop-when-empty` loop.
-
-### Updating after a `git push`
-
-```bash
-cd ~/srmacshop
-git pull
-cd siyean-laravel
-composer install --no-dev --optimize-autoloader
-php artisan migrate --force
-php artisan config:cache
-php artisan route:cache
-php artisan view:cache
-```
+- `routes/web.php` matches **every** path and forwards to
+  `LegacyBridgeController@handle`.
+- The controller copies request data into `$_SERVER`, `$_GET`, `$_POST`,
+  `$_FILES`, defines `LARAVEL_BRIDGE_MODE`, and `require`s
+  `../siyean/public/index.php`.
+- The legacy app does its own routing inside `App\Http\HttpKernel`, renders
+  via `App\Http\ViewRenderer`, and writes output. The controller captures the
+  output buffer and returns it as the Laravel response.
+- Legacy redirects are signalled by throwing `RuntimeException` with a
+  `__LEGACY_REDIRECT__:` prefix; the bridge converts those into a normal
+  Laravel redirect response.
+- Laravel's CSRF middleware is **disabled site-wide** in `bootstrap/app.php`
+  because the legacy forms do not emit Laravel CSRF tokens. The legacy app
+  manages its own form security.
 
 ## Production Checklist
 
-- [ ] `APP_ENV=production` and `APP_DEBUG=false` in `.env`
-- [ ] `APP_KEY` generated (`php artisan key:generate`)
-- [ ] `APP_URL` matches the live domain (with `https://`)
-- [ ] HTTPS enabled in cPanel (AutoSSL / Let's Encrypt)
-- [ ] Database credentials set and `php artisan migrate --force` run
-- [ ] `storage/` and `bootstrap/cache/` writable
+- [ ] `siyean/` has `composer install --no-dev --optimize-autoloader` done
+- [ ] `siyean/storage/pos.db` exists and is writable (664)
+- [ ] At least one admin user created via `siyean/scripts/create_user.php`
+- [ ] Optional: `siyean/config/app.php` set up (see `app.example.php`) for
+      email / Telegram notifications
+- [ ] Laravel `.env` has `APP_ENV=production`, `APP_DEBUG=false`,
+      `APP_URL=https://srmacshop.com`, `APP_KEY` generated
+- [ ] `siyean-laravel/storage/` and `bootstrap/cache/` writable (775)
 - [ ] `config:cache`, `route:cache`, `view:cache` run
-- [ ] Document root points to `siyean-laravel/public/` (or bootstrap forwarder
-      in place — see Option A)
-- [ ] `.env`, `vendor/`, `storage/`, `bootstrap/`, `database/` are not
-      web-accessible
-
-## Troubleshooting
-
-- **HTTP 500 on every page**: temporarily set `APP_DEBUG=true` in `.env`,
-  refresh, read the message, then set it back to `false`. Check
-  `storage/logs/laravel.log`.
-- **"No application encryption key has been specified."**: run
-  `php artisan key:generate`.
-- **"could not find driver"**: enable `pdo_mysql` (MultiPHP INI Editor) or
-  switch `DB_CONNECTION=sqlite` and ensure `pdo_sqlite` is enabled.
-- **Permission denied on `storage/logs/laravel.log`**: re-run the chmod block
-  in step 5.
+- [ ] `~/public_html` wired to `siyean-laravel/public/` (symlink or forwarder)
+- [ ] HTTPS active in cPanel (AutoSSL) and Cloudflare SSL = Full (strict)
