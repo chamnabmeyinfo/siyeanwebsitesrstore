@@ -589,25 +589,66 @@ function user_initials(string $name): string
         color: var(--chip-color);
       }
       .dashboard-hero {
+        position: relative;
         display: grid;
-        grid-template-columns: minmax(0, 1fr) minmax(160px, 240px);
-        gap: 1.25rem;
-        align-items: stretch;
-        padding: 1.35rem 1.35rem 1.35rem 1.5rem;
-        border-radius: 1.25rem;
+        grid-template-columns: minmax(0, 1fr) minmax(170px, 260px);
+        gap: clamp(1rem, 3vw, 1.75rem);
+        align-items: center;
+        padding: clamp(1.25rem, 3vw, 1.75rem) clamp(1.25rem, 3vw, 1.85rem);
+        border-radius: 1.35rem;
+        isolation: isolate;
+        overflow: hidden;
         background:
-          radial-gradient(ellipse 90% 70% at 12% 18%, rgba(59, 130, 246, 0.35), transparent 52%),
-          radial-gradient(ellipse 70% 55% at 88% 82%, rgba(14, 165, 233, 0.18), transparent 50%),
-          linear-gradient(155deg, rgba(15, 23, 42, 0.92), rgba(2, 6, 23, 0.96));
-        border: 1px solid rgba(96, 165, 250, 0.22);
-        box-shadow: 0 24px 48px rgba(2, 6, 23, 0.45);
+          radial-gradient(ellipse 100% 80% at 0% 0%, rgba(59, 130, 246, 0.28), transparent 55%),
+          radial-gradient(ellipse 80% 70% at 100% 100%, rgba(14, 165, 233, 0.22), transparent 50%),
+          linear-gradient(168deg, rgba(17, 26, 46, 0.97) 0%, rgba(8, 12, 24, 0.98) 48%, rgba(15, 23, 42, 0.95) 100%);
+        border: 1px solid rgba(96, 165, 250, 0.2);
+        box-shadow:
+          0 0 0 1px rgba(255, 255, 255, 0.04) inset,
+          0 1px 0 rgba(255, 255, 255, 0.06) inset,
+          0 28px 56px -16px rgba(2, 6, 23, 0.65),
+          0 12px 32px rgba(37, 99, 235, 0.12);
+      }
+      .dashboard-hero::before {
+        content: "";
+        position: absolute;
+        inset: 0;
+        border-radius: inherit;
+        background-image: repeating-linear-gradient(
+          -12deg,
+          transparent,
+          transparent 31px,
+          rgba(148, 163, 184, 0.04) 31px,
+          rgba(148, 163, 184, 0.04) 32px
+        );
+        pointer-events: none;
+        z-index: 0;
+        opacity: 0.7;
       }
       :root[data-theme="light"] .dashboard-hero {
         background:
-          radial-gradient(ellipse 90% 70% at 12% 18%, rgba(59, 130, 246, 0.2), transparent 52%),
-          linear-gradient(165deg, #ffffff, #f1f5f9);
-        border-color: rgba(15, 23, 42, 0.08);
-        box-shadow: 0 18px 40px rgba(15, 23, 42, 0.08);
+          radial-gradient(ellipse 100% 85% at 8% 12%, rgba(59, 130, 246, 0.18), transparent 52%),
+          radial-gradient(ellipse 75% 65% at 92% 88%, rgba(56, 189, 248, 0.12), transparent 48%),
+          linear-gradient(172deg, #ffffff 0%, #f8fafc 45%, #eef2f7 100%);
+        border-color: rgba(15, 23, 42, 0.09);
+        box-shadow:
+          0 0 0 1px rgba(255, 255, 255, 0.95) inset,
+          0 22px 48px -18px rgba(15, 23, 42, 0.12),
+          0 8px 24px rgba(59, 130, 246, 0.06);
+      }
+      :root[data-theme="light"] .dashboard-hero::before {
+        background-image: repeating-linear-gradient(
+          -12deg,
+          transparent,
+          transparent 31px,
+          rgba(15, 23, 42, 0.028) 31px,
+          rgba(15, 23, 42, 0.028) 32px
+        );
+        opacity: 1;
+      }
+      .dashboard-hero-copy {
+        position: relative;
+        z-index: 1;
       }
       .dashboard-hero-copy h2 {
         margin: 0.35rem 0 0;
@@ -624,24 +665,130 @@ function user_initials(string $name): string
         line-height: 1.55;
       }
       .dashboard-hero-visual {
-        border-radius: 1rem;
-        background: linear-gradient(140deg, rgba(59, 130, 246, 0.25), rgba(15, 23, 42, 0.6));
-        border: 1px solid rgba(148, 163, 184, 0.15);
-        min-height: 120px;
         position: relative;
+        z-index: 1;
+        border-radius: 1.1rem;
+        min-height: 132px;
+        min-width: 0;
         overflow: hidden;
+        border: 1px solid rgba(148, 163, 184, 0.14);
+        background: rgba(2, 6, 23, 0.35);
+        box-shadow:
+          0 0 0 1px rgba(255, 255, 255, 0.05) inset,
+          0 16px 40px rgba(2, 6, 23, 0.45);
       }
       :root[data-theme="light"] .dashboard-hero-visual {
-        background: linear-gradient(140deg, rgba(59, 130, 246, 0.15), rgba(241, 245, 249, 0.9));
-        border-color: rgba(15, 23, 42, 0.06);
+        background: rgba(255, 255, 255, 0.55);
+        border-color: rgba(15, 23, 42, 0.07);
+        box-shadow:
+          0 0 0 1px rgba(255, 255, 255, 0.9) inset,
+          0 14px 36px rgba(15, 23, 42, 0.08);
       }
-      .dashboard-hero-visual::after {
-        content: "";
+      .dashboard-hero-visual__bg {
         position: absolute;
-        inset: 20%;
+        inset: 0;
+        background:
+          radial-gradient(circle at 30% 25%, rgba(96, 165, 250, 0.35), transparent 52%),
+          radial-gradient(circle at 78% 72%, rgba(34, 211, 238, 0.12), transparent 45%),
+          linear-gradient(165deg, rgba(30, 58, 138, 0.35), rgba(15, 23, 42, 0.85));
+      }
+      :root[data-theme="light"] .dashboard-hero-visual__bg {
+        background:
+          radial-gradient(circle at 28% 22%, rgba(59, 130, 246, 0.2), transparent 55%),
+          radial-gradient(circle at 82% 78%, rgba(14, 165, 233, 0.1), transparent 48%),
+          linear-gradient(165deg, rgba(241, 245, 249, 0.95), rgba(226, 232, 240, 0.65));
+      }
+      .dashboard-hero-visual__stack {
+        position: relative;
+        z-index: 1;
+        height: 100%;
+        min-height: 132px;
+        padding: 1rem 0.85rem;
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+        gap: 0.5rem;
+      }
+      .dashboard-hero-pill {
+        display: flex;
+        align-items: center;
+        gap: 0.45rem;
+        padding: 0.42rem 0.65rem;
+        border-radius: 999px;
+        font-size: 0.72rem;
+        font-weight: 600;
+        letter-spacing: 0.02em;
+        color: rgba(226, 232, 240, 0.95);
+        background: rgba(15, 23, 42, 0.55);
+        border: 1px solid rgba(148, 163, 184, 0.18);
+        backdrop-filter: blur(8px);
+        box-shadow: 0 4px 14px rgba(2, 6, 23, 0.35);
+        transform-origin: left center;
+      }
+      .dashboard-hero-pill:nth-child(1) {
+        transform: translateX(0) rotate(-1deg);
+      }
+      .dashboard-hero-pill:nth-child(2) {
+        transform: translateX(0.35rem) rotate(0.5deg);
+        align-self: flex-end;
+        max-width: calc(100% - 0.25rem);
+      }
+      .dashboard-hero-pill:nth-child(3) {
+        transform: translateX(0.15rem) rotate(-0.5deg);
+      }
+      :root[data-theme="light"] .dashboard-hero-pill {
+        color: #0f172a;
+        background: rgba(255, 255, 255, 0.82);
+        border-color: rgba(15, 23, 42, 0.08);
+        box-shadow: 0 4px 16px rgba(15, 23, 42, 0.07);
+      }
+      .dashboard-hero-dot {
+        width: 6px;
+        height: 6px;
         border-radius: 50%;
-        background: radial-gradient(circle, rgba(147, 197, 253, 0.35), transparent 68%);
-        filter: blur(8px);
+        flex-shrink: 0;
+        background: #38bdf8;
+        box-shadow: 0 0 0 3px rgba(56, 189, 248, 0.25);
+      }
+      .dashboard-hero-dot--sky {
+        background: #60a5fa;
+        box-shadow: 0 0 0 3px rgba(96, 165, 250, 0.28);
+      }
+      .dashboard-hero-dot--mint {
+        background: #34d399;
+        box-shadow: 0 0 0 3px rgba(52, 211, 153, 0.28);
+      }
+      .stat-grid-wrap {
+        display: flex;
+        flex-direction: column;
+        gap: 0.65rem;
+      }
+      .dashboard-period-meta {
+        margin: 0;
+        font-size: 0.82rem;
+        color: var(--muted);
+        letter-spacing: 0.02em;
+      }
+      .dashboard-period-meta time {
+        font-weight: 600;
+        color: var(--text-color);
+      }
+      .dashboard-hero-meta {
+        margin: 0.4rem 0 0;
+        font-size: 0.8rem;
+        color: var(--muted);
+        letter-spacing: 0.02em;
+      }
+      .dashboard-hero-meta__label {
+        font-weight: 700;
+        font-size: 0.72rem;
+        text-transform: uppercase;
+        letter-spacing: 0.1em;
+        color: var(--chip-color);
+      }
+      .dashboard-hero-meta time {
+        font-weight: 600;
+        color: var(--text-color);
       }
       .stat-grid {
         display: grid;
@@ -704,9 +851,14 @@ function user_initials(string $name): string
       @media (max-width: 720px) {
         .dashboard-hero {
           grid-template-columns: 1fr;
+          align-items: stretch;
         }
         .dashboard-hero-visual {
-          min-height: 96px;
+          min-height: 124px;
+        }
+        .dashboard-hero-pill:nth-child(2) {
+          align-self: stretch;
+          max-width: none;
         }
       }
       .showroom-hero {
