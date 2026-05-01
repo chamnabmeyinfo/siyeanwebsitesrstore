@@ -37,6 +37,38 @@ final class HttpKernel
                 $this->handleLoginPost();
                 break;
 
+            case $method === 'GET' && $requestPath === '/forgot-password':
+                if ($this->auth->user()) {
+                    $this->view->redirect('/dashboard');
+                }
+                $this->view->render('auth_forgot_password.php', ['layout' => 'auth']);
+                break;
+
+            case $method === 'POST' && $requestPath === '/forgot-password':
+                $this->handleForgotPasswordPost();
+                break;
+
+            case $method === 'GET' && $requestPath === '/reset-password':
+                if ($this->auth->user()) {
+                    $this->view->redirect('/dashboard');
+                }
+                $token = trim($_GET['token'] ?? '');
+                $email = trim($_GET['email'] ?? '');
+                if ($token === '' || $email === '') {
+                    $this->view->flash('error', 'Invalid password reset link.');
+                    $this->view->redirect('/forgot-password');
+                }
+                $this->view->render('auth_reset_password.php', [
+                    'layout' => 'auth',
+                    'token' => $token,
+                    'email' => $email,
+                ]);
+                break;
+
+            case $method === 'POST' && $requestPath === '/reset-password':
+                $this->handleResetPasswordPost();
+                break;
+
             case $method === 'POST' && $requestPath === '/logout':
                 $this->auth->requireAuth($this->view);
                 $this->handleLogoutPost();
@@ -208,6 +240,86 @@ final class HttpKernel
         session_regenerate_id(true);
         $this->view->flash('success', 'Signed out successfully.');
         $this->view->redirect('/');
+    }
+
+    private function handleForgotPasswordPost(): void
+    {
+        $email = trim($_POST['email'] ?? '');
+        if (!filter_var($email, FILTER_VALIDATE_EMAIL)) {
+            $this->view->flash('error', 'Please enter a valid email address.');
+            $this->view->redirect('/forgot-password');
+        }
+
+        $token = bin2hex(random_bytes(32));
+        $expiresAt = gmdate('Y-m-d H:i:s', time() + 1800);
+        $stored = $this->app->users->createPasswordResetToken($email, $token, $expiresAt);
+        if ($stored) {
+            $this->sendResetPasswordEmail($email, $token);
+        }
+
+        // Do not reveal whether the email exists.
+        $this->view->flash('success', 'If an account exists, we emailed a password reset link.');
+        $this->view->redirect('/forgot-password');
+    }
+
+    private function handleResetPasswordPost(): void
+    {
+        $email = trim($_POST['email'] ?? '');
+        $token = trim($_POST['token'] ?? '');
+        $password = $_POST['password'] ?? '';
+        $passwordConfirmation = $_POST['password_confirmation'] ?? '';
+
+        if (!filter_var($email, FILTER_VALIDATE_EMAIL) || $token === '') {
+            $this->view->flash('error', 'Invalid password reset request.');
+            $this->view->redirect('/forgot-password');
+        }
+
+        if ($password === '' || strlen($password) < 8) {
+            $this->view->flash('error', 'Password must be at least 8 characters.');
+            $this->view->redirect('/reset-password?email=' . urlencode($email) . '&token=' . urlencode($token));
+        }
+
+        if ($password !== $passwordConfirmation) {
+            $this->view->flash('error', 'Password confirmation does not match.');
+            $this->view->redirect('/reset-password?email=' . urlencode($email) . '&token=' . urlencode($token));
+        }
+
+        if (!$this->app->users->isPasswordResetTokenValid($email, $token)) {
+            $this->view->flash('error', 'Reset link is invalid or expired.');
+            $this->view->redirect('/forgot-password');
+        }
+
+        if (!$this->app->users->updatePassword($email, $password)) {
+            $this->view->flash('error', 'Unable to reset password for this account.');
+            $this->view->redirect('/forgot-password');
+        }
+
+        $this->app->users->clearPasswordResetTokens($email);
+        $this->view->flash('success', 'Password reset successful. Please sign in.');
+        $this->view->redirect('/login');
+    }
+
+    private function sendResetPasswordEmail(string $email, string $token): void
+    {
+        $scheme = 'http';
+        $https = $_SERVER['HTTPS'] ?? null;
+        $forwardedProto = strtolower((string) ($_SERVER['HTTP_X_FORWARDED_PROTO'] ?? ''));
+        if ($https === 'on' || $https === '1' || $forwardedProto === 'https') {
+            $scheme = 'https';
+        }
+
+        $host = $_SERVER['HTTP_HOST'] ?? 'localhost';
+        $resetUrl = $scheme . '://' . $host . '/reset-password?email=' . urlencode($email) . '&token=' . urlencode($token);
+        $subject = 'SR Mac Shop staff password reset';
+        $message = "Hello,\n\nWe received a request to reset your SR Mac Shop staff password.\n\n" .
+            "Reset link (valid for 30 minutes):\n{$resetUrl}\n\n" .
+            "If you did not request this, you can safely ignore this email.\n";
+        $headers = implode("\r\n", [
+            'From: no-reply@' . $host,
+            'Content-Type: text/plain; charset=UTF-8',
+        ]);
+
+        @mail($email, $subject, $message, $headers);
     }
 
     private function renderPublicStorefront(): void

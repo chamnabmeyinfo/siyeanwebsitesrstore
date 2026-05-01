@@ -59,6 +59,12 @@ final class AuthGate
         if ($path === '/login' && in_array($method, ['GET', 'POST'], true)) {
             return true;
         }
+        if ($path === '/forgot-password' && in_array($method, ['GET', 'POST'], true)) {
+            return true;
+        }
+        if ($path === '/reset-password' && in_array($method, ['GET', 'POST'], true)) {
+            return true;
+        }
         if ($path === '/') {
             return true;
         }

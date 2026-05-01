@@ -56,6 +56,10 @@ as `php scripts/*.php` there (wrappers). The steps below apply when developing
    php scripts/create_user.php --name="Store Owner" --email="owner@example.com" --password="SuperSecure123" --role=admin
    ```
 6. Sign in at http://127.0.0.1:8000/login (admins can invite clerks with `--role=clerk`).
+   Staff self-service reset is available via:
+   - `GET /forgot-password`
+   - `GET /reset-password?email=<email>&token=<token>`
+   (reset link is sent by email when mail delivery is available on the host)
 
    List existing staff accounts (CSV to the terminal; passwords are never shown):
 

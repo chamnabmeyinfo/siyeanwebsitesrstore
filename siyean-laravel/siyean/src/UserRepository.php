@@ -54,6 +54,67 @@ final class UserRepository
         return $stmt->rowCount() > 0;
     }
 
+    public function createPasswordResetToken(string $email, string $token, string $expiresAt): bool
+    {
+        if (!filter_var($email, FILTER_VALIDATE_EMAIL)) {
+            throw new InvalidArgumentException('Invalid email address.');
+        }
+        if ($token === '') {
+            throw new InvalidArgumentException('Token cannot be empty.');
+        }
+
+        if (!$this->findByEmail($email)) {
+            return false;
+        }
+
+        $delete = $this->db->prepare('DELETE FROM user_password_resets WHERE LOWER(email) = LOWER(:email)');
+        $delete->execute([':email' => $email]);
+
+        $insert = $this->db->prepare(
+            'INSERT INTO user_password_resets (email, token_hash, expires_at) VALUES (:email, :token_hash, :expires_at)'
+        );
+        $insert->execute([
+            ':email' => strtolower($email),
+            ':token_hash' => hash('sha256', $token),
+            ':expires_at' => $expiresAt,
+        ]);
+
+        return true;
+    }
+
+    public function isPasswordResetTokenValid(string $email, string $token): bool
+    {
+        if (!filter_var($email, FILTER_VALIDATE_EMAIL) || $token === '') {
+            return false;
+        }
+
+        $stmt = $this->db->prepare(
+            'SELECT token_hash
+             FROM user_password_resets
+             WHERE LOWER(email) = LOWER(:email)
+               AND expires_at > CURRENT_TIMESTAMP
+             ORDER BY created_at DESC
+             LIMIT 1'
+        );
+        $stmt->execute([':email' => $email]);
+        $row = $stmt->fetch();
+
+        if (!$row || !isset($row['token_hash'])) {
+            return false;
+        }
+
+        return hash_equals((string) $row['token_hash'], hash('sha256', $token));
+    }
+
+    public function clearPasswordResetTokens(string $email): void
+    {
+        if (!filter_var($email, FILTER_VALIDATE_EMAIL)) {
+            return;
+        }
+        $stmt = $this->db->prepare('DELETE FROM user_password_resets WHERE LOWER(email) = LOWER(:email)');
+        $stmt->execute([':email' => $email]);
+    }
+
     public function findByEmail(string $email): ?array
     {
         $stmt = $this->db->prepare('SELECT * FROM users WHERE LOWER(email) = LOWER(:email) LIMIT 1');
