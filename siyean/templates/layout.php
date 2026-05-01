@@ -77,42 +77,99 @@ function nav_attrs(string $href, string $current): string
         background: transparent;
       }
       .main-header {
-        display: flex;
+        --header-divider: rgba(148, 163, 184, 0.22);
+        display: grid;
+        grid-template-columns: minmax(0, auto) minmax(0, 1fr) auto;
         align-items: center;
-        justify-content: space-between;
-        padding: 1.2rem clamp(1.5rem, 4vw, 3rem);
-        margin: 1.2rem clamp(1.5rem, 4vw, 3rem) 0;
-        border-radius: 1.2rem;
-        background: linear-gradient(120deg, rgba(11, 18, 32, 0.95), rgba(37, 99, 235, 0.3));
-        border: 1px solid rgba(59, 130, 246, 0.25);
-        box-shadow: 0 25px 50px rgba(2, 6, 23, 0.5);
-        gap: 1rem 1.25rem;
-        flex-wrap: nowrap;
+        column-gap: clamp(0.75rem, 2vw, 1.75rem);
+        row-gap: 1rem;
+        padding: 0.85rem 1rem 0.85rem clamp(1rem, 3vw, 2rem);
+        margin: 1rem clamp(1.25rem, 4vw, 3rem) 0;
+        border-radius: 1.35rem;
+        position: relative;
+        isolation: isolate;
+        background:
+          linear-gradient(145deg, rgba(17, 26, 46, 0.92) 0%, rgba(15, 23, 42, 0.88) 45%, rgba(30, 58, 138, 0.35) 100%);
+        border: 1px solid rgba(96, 165, 250, 0.18);
+        box-shadow:
+          0 0 0 1px rgba(255, 255, 255, 0.04) inset,
+          0 1px 0 rgba(255, 255, 255, 0.06) inset,
+          0 28px 56px -12px rgba(2, 6, 23, 0.65),
+          0 12px 24px -16px rgba(37, 99, 235, 0.35);
+        backdrop-filter: blur(12px);
+      }
+      .main-header::before {
+        content: "";
+        position: absolute;
+        inset: 0;
+        border-radius: inherit;
+        padding: 1px;
+        background: linear-gradient(
+          125deg,
+          rgba(147, 197, 253, 0.45) 0%,
+          rgba(59, 130, 246, 0.08) 35%,
+          rgba(59, 130, 246, 0.05) 70%,
+          rgba(96, 165, 250, 0.25) 100%
+        );
+        -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+        mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+        -webkit-mask-composite: xor;
+        mask-composite: exclude;
+        pointer-events: none;
+        opacity: 0.85;
       }
       @media (max-width: 680px) {
         .main-header {
-          flex-wrap: wrap;
+          grid-template-columns: minmax(0, 1fr) auto;
+          grid-template-rows: auto auto;
         }
-        .brand {
-          flex: 1 1 auto;
+        .main-header .brand {
+          grid-column: 1;
+          grid-row: 1;
           min-width: 0;
         }
-        nav {
-          flex: 1 1 100%;
-          order: 3;
+        .main-header .header-actions {
+          grid-column: 2;
+          grid-row: 1;
+          align-self: center;
+          justify-self: end;
+          margin-left: 0;
+          padding-left: 0;
+          border-left: none;
         }
-        .user-chip {
-          flex: 1 1 auto;
-          justify-content: flex-end;
+        .main-header nav {
+          grid-column: 1 / -1;
+          grid-row: 2;
+          justify-self: stretch;
         }
       }
       :root[data-theme="light"] header {
         background: transparent;
       }
       :root[data-theme="light"] .main-header {
-        background: linear-gradient(120deg, rgba(248, 250, 252, 0.95), rgba(226, 232, 240, 0.85));
-        border: 1px solid rgba(15, 23, 42, 0.08);
-        box-shadow: 0 15px 40px rgba(15, 23, 42, 0.12);
+        --header-divider: rgba(15, 23, 42, 0.1);
+        background: linear-gradient(
+          165deg,
+          rgba(255, 255, 255, 0.98) 0%,
+          rgba(248, 250, 252, 0.95) 40%,
+          rgba(241, 245, 249, 0.92) 100%
+        );
+        border-color: rgba(15, 23, 42, 0.09);
+        box-shadow:
+          0 0 0 1px rgba(255, 255, 255, 0.8) inset,
+          0 1px 0 rgba(255, 255, 255, 1) inset,
+          0 22px 44px -18px rgba(15, 23, 42, 0.14),
+          0 8px 16px -10px rgba(59, 130, 246, 0.12);
+        backdrop-filter: blur(10px);
+      }
+      :root[data-theme="light"] .main-header::before {
+        background: linear-gradient(
+          125deg,
+          rgba(59, 130, 246, 0.2) 0%,
+          rgba(148, 163, 184, 0.08) 45%,
+          rgba(59, 130, 246, 0.12) 100%
+        );
+        opacity: 1;
       }
       .brand {
         display: flex;
@@ -139,12 +196,16 @@ function nav_attrs(string $href, string $current): string
       }
       .brand h1 {
         margin: 0;
-        font-size: 1.8rem;
+        font-size: clamp(1.35rem, 3vw, 1.75rem);
+        font-weight: 600;
+        letter-spacing: -0.03em;
+        line-height: 1.15;
       }
       .brand-tagline {
-        margin: 0;
+        margin: 0.2rem 0 0;
         color: var(--muted);
-        font-size: 0.95rem;
+        font-size: 0.8125rem;
+        letter-spacing: 0.02em;
       }
       .brand-badge {
         background: rgba(56, 189, 248, 0.15);
@@ -156,21 +217,38 @@ function nav_attrs(string $href, string $current): string
         border: 1px solid rgba(56, 189, 248, 0.4);
       }
       nav {
-        flex: 1;
         min-width: 0;
+        justify-self: center;
+        width: 100%;
+        max-width: min(52rem, 100%);
+      }
+      .nav-shell {
+        display: block;
+        width: 100%;
+        padding: 0.3rem 0.45rem;
+        border-radius: 999px;
+        background: rgba(2, 6, 23, 0.35);
+        border: 1px solid rgba(148, 163, 184, 0.12);
+        box-shadow: 0 1px 0 rgba(255, 255, 255, 0.05) inset;
+      }
+      :root[data-theme="light"] .nav-shell {
+        background: rgba(15, 23, 42, 0.04);
+        border-color: rgba(15, 23, 42, 0.07);
+        box-shadow: 0 1px 0 rgba(255, 255, 255, 0.9) inset;
       }
       .nav-links {
         display: flex;
         align-items: center;
-        gap: 0.35rem;
+        justify-content: center;
+        gap: 0.2rem;
         flex-wrap: nowrap;
         overflow-x: auto;
         overflow-y: hidden;
         -webkit-overflow-scrolling: touch;
         scrollbar-width: thin;
         scrollbar-color: rgba(148, 163, 184, 0.45) transparent;
-        padding: 0.15rem 0;
-        mask-image: linear-gradient(to right, transparent 0, #000 12px, #000 calc(100% - 12px), transparent 100%);
+        padding: 0.05rem 0;
+        mask-image: linear-gradient(to right, transparent 0, #000 10px, #000 calc(100% - 10px), transparent 100%);
       }
       .nav-links::-webkit-scrollbar {
         height: 5px;
@@ -184,31 +262,34 @@ function nav_attrs(string $href, string $current): string
         color: #e2e8f0;
         text-decoration: none;
         font-weight: 500;
-        font-size: 0.875rem;
-        padding: 0.42rem 0.85rem;
+        font-size: 0.8125rem;
+        padding: 0.45rem 0.8rem;
         border-radius: 999px;
-        border: 1px solid rgba(226, 232, 240, 0.15);
-        background: rgba(15, 23, 42, 0.35);
-        transition: background 0.2s ease, transform 0.2s ease, border-color 0.2s ease;
+        border: 1px solid transparent;
+        background: transparent;
+        transition: background 0.18s ease, transform 0.18s ease, border-color 0.18s ease, box-shadow 0.18s ease;
       }
       .nav-links a:hover {
-        background: rgba(255, 255, 255, 0.15);
+        background: rgba(255, 255, 255, 0.08);
         transform: translateY(-1px);
       }
       .nav-links a.active {
-        background: rgba(59, 130, 246, 0.28);
-        border-color: rgba(96, 165, 250, 0.55);
-        box-shadow: 0 0 0 1px rgba(59, 130, 246, 0.35);
+        background: rgba(59, 130, 246, 0.35);
+        border-color: rgba(147, 197, 253, 0.35);
+        box-shadow: 0 2px 12px rgba(37, 99, 235, 0.35);
       }
       :root[data-theme="light"] .nav-links a {
         color: #0f172a;
-        background: rgba(15, 23, 42, 0.05);
-        border-color: rgba(15, 23, 42, 0.08);
+        background: transparent;
+        border-color: transparent;
+      }
+      :root[data-theme="light"] .nav-links a:hover {
+        background: rgba(15, 23, 42, 0.06);
       }
       :root[data-theme="light"] .nav-links a.active {
-        background: rgba(59, 130, 246, 0.14);
-        border-color: rgba(37, 99, 235, 0.35);
-        box-shadow: 0 0 0 1px rgba(59, 130, 246, 0.12);
+        background: rgba(59, 130, 246, 0.18);
+        border-color: rgba(37, 99, 235, 0.25);
+        box-shadow: 0 2px 10px rgba(37, 99, 235, 0.15);
       }
       main {
         padding: 2.5rem clamp(1.5rem, 4vw, 4rem);
@@ -633,17 +714,26 @@ function nav_attrs(string $href, string $current): string
       }
       .theme-toggle {
         display: flex;
-        gap: 0.4rem;
+        gap: 0.25rem;
         align-items: center;
+        padding: 0.2rem;
+        border-radius: 999px;
+        background: rgba(2, 6, 23, 0.28);
+        border: 1px solid rgba(148, 163, 184, 0.12);
+      }
+      :root[data-theme="light"] .theme-toggle {
+        background: rgba(15, 23, 42, 0.05);
+        border-color: rgba(15, 23, 42, 0.08);
       }
       .theme-btn {
         background: transparent;
-        border: 1px solid rgba(148, 163, 184, 0.35);
-        padding: 0.4rem 0.8rem;
+        border: 1px solid transparent;
+        padding: 0.38rem 0.72rem;
         border-radius: 999px;
         color: var(--muted);
         cursor: pointer;
-        font-size: 0.85rem;
+        font-size: 0.8125rem;
+        transition: background 0.18s ease, border-color 0.18s ease, color 0.18s ease;
       }
       .theme-btn.active {
         border-color: rgba(59, 130, 246, 0.7);
@@ -657,10 +747,15 @@ function nav_attrs(string $href, string $current): string
       .user-chip {
         display: flex;
         align-items: center;
-        gap: 0.6rem;
+        gap: 0.65rem;
         flex-shrink: 0;
         flex-wrap: wrap;
         justify-content: flex-end;
+      }
+      .header-actions {
+        padding-left: clamp(0.5rem, 2vw, 1.25rem);
+        margin-left: clamp(0.25rem, 1vw, 0.75rem);
+        border-left: 1px solid var(--header-divider);
       }
       .user-chip span {
         font-size: 0.9rem;
@@ -689,16 +784,18 @@ function nav_attrs(string $href, string $current): string
           </div>
         </div>
         <nav aria-label="Main navigation">
-          <div class="nav-links">
-            <a href="/"<?= nav_attrs('/', $navPath) ?>>Dashboard</a>
-            <a href="/inventory"<?= nav_attrs('/inventory', $navPath) ?>>Inventory</a>
-            <a href="/sales/new"<?= nav_attrs('/sales/new', $navPath) ?>>New Sale</a>
-            <a href="/sales"<?= nav_attrs('/sales', $navPath) ?>>Sales</a>
-            <a href="/bookings"<?= nav_attrs('/bookings', $navPath) ?>>Bookings</a>
-            <a href="/store"<?= nav_attrs('/store', $navPath) ?>>Showroom</a>
+          <div class="nav-shell">
+            <div class="nav-links">
+              <a href="/"<?= nav_attrs('/', $navPath) ?>>Dashboard</a>
+              <a href="/inventory"<?= nav_attrs('/inventory', $navPath) ?>>Inventory</a>
+              <a href="/sales/new"<?= nav_attrs('/sales/new', $navPath) ?>>New Sale</a>
+              <a href="/sales"<?= nav_attrs('/sales', $navPath) ?>>Sales</a>
+              <a href="/bookings"<?= nav_attrs('/bookings', $navPath) ?>>Bookings</a>
+              <a href="/store"<?= nav_attrs('/store', $navPath) ?>>Showroom</a>
+            </div>
           </div>
         </nav>
-        <div class="user-chip">
+        <div class="user-chip header-actions">
           <div class="theme-toggle">
             <button class="theme-btn" data-theme="light">Light</button>
             <button class="theme-btn" data-theme="dark">Dark</button>
