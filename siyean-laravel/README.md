@@ -27,8 +27,11 @@ php scripts/create_user.php \
     --name="Owner" --email="owner@example.com" \
     --password="ChangeMe123!" --role=admin
 
-# Optional: sample inventory
+# Optional: sample inventory (4 SKUs)
 php scripts/seed_inventory.php
+
+# Optional: ~50 demo Mac SKUs (DEMO-001 … DEMO-050) for storefront layout preview
+php scripts/seed_demo_catalog_50.php
 
 php artisan serve
 # http://127.0.0.1:8000/       storefront
@@ -36,7 +39,7 @@ php artisan serve
 ```
 
 Other CLI tools: `php scripts/list_users.php`, `php scripts/reset_password.php`,
-`php scripts/seed_demo_data.php`.
+`php scripts/seed_demo_data.php`, `php scripts/seed_demo_catalog_50.php`.
 
 See `./siyean/README.md` for POS feature detail (optional reading).
 
