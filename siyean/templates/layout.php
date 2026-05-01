@@ -1,5 +1,26 @@
 <?php
 /** @var array|null $flash */
+$navPath = parse_url($_SERVER['REQUEST_URI'] ?? '/', PHP_URL_PATH) ?: '/';
+
+function nav_link_active(string $href, string $current): bool
+{
+    if ($href === '/') {
+        return $current === '/';
+    }
+    if ($href === '/sales/new') {
+        return str_starts_with($current, '/sales/new');
+    }
+    if ($href === '/sales') {
+        return $current === '/sales';
+    }
+
+    return str_starts_with($current, $href);
+}
+
+function nav_attrs(string $href, string $current): string
+{
+    return nav_link_active($href, $current) ? ' class="active" aria-current="page"' : '';
+}
 ?>
 <!DOCTYPE html>
 <html lang="en" data-theme="system">
@@ -65,7 +86,25 @@
         background: linear-gradient(120deg, rgba(11, 18, 32, 0.95), rgba(37, 99, 235, 0.3));
         border: 1px solid rgba(59, 130, 246, 0.25);
         box-shadow: 0 25px 50px rgba(2, 6, 23, 0.5);
-        gap: 1.5rem;
+        gap: 1rem 1.25rem;
+        flex-wrap: nowrap;
+      }
+      @media (max-width: 680px) {
+        .main-header {
+          flex-wrap: wrap;
+        }
+        .brand {
+          flex: 1 1 auto;
+          min-width: 0;
+        }
+        nav {
+          flex: 1 1 100%;
+          order: 3;
+        }
+        .user-chip {
+          flex: 1 1 auto;
+          justify-content: flex-end;
+        }
       }
       :root[data-theme="light"] header {
         background: transparent;
@@ -79,6 +118,7 @@
         display: flex;
         align-items: center;
         gap: 1rem;
+        flex-shrink: 0;
       }
       .brand-logo {
         width: 56px;
@@ -117,32 +157,58 @@
       }
       nav {
         flex: 1;
+        min-width: 0;
       }
       .nav-links {
         display: flex;
         align-items: center;
-        gap: 0.4rem;
-        flex-wrap: wrap;
+        gap: 0.35rem;
+        flex-wrap: nowrap;
+        overflow-x: auto;
+        overflow-y: hidden;
+        -webkit-overflow-scrolling: touch;
+        scrollbar-width: thin;
+        scrollbar-color: rgba(148, 163, 184, 0.45) transparent;
+        padding: 0.15rem 0;
+        mask-image: linear-gradient(to right, transparent 0, #000 12px, #000 calc(100% - 12px), transparent 100%);
+      }
+      .nav-links::-webkit-scrollbar {
+        height: 5px;
+      }
+      .nav-links::-webkit-scrollbar-thumb {
+        background: rgba(148, 163, 184, 0.45);
+        border-radius: 999px;
       }
       .nav-links a {
+        flex: 0 0 auto;
         color: #e2e8f0;
         text-decoration: none;
         font-weight: 500;
-        padding: 0.45rem 1rem;
+        font-size: 0.875rem;
+        padding: 0.42rem 0.85rem;
         border-radius: 999px;
         border: 1px solid rgba(226, 232, 240, 0.15);
         background: rgba(15, 23, 42, 0.35);
-        transition: background 0.2s ease, transform 0.2s ease;
+        transition: background 0.2s ease, transform 0.2s ease, border-color 0.2s ease;
       }
-      .nav-links a:hover,
-      .nav-links a.active {
+      .nav-links a:hover {
         background: rgba(255, 255, 255, 0.15);
         transform: translateY(-1px);
+      }
+      .nav-links a.active {
+        background: rgba(59, 130, 246, 0.28);
+        border-color: rgba(96, 165, 250, 0.55);
+        box-shadow: 0 0 0 1px rgba(59, 130, 246, 0.35);
       }
       :root[data-theme="light"] .nav-links a {
         color: #0f172a;
         background: rgba(15, 23, 42, 0.05);
         border-color: rgba(15, 23, 42, 0.08);
+      }
+      :root[data-theme="light"] .nav-links a.active {
+        background: rgba(59, 130, 246, 0.14);
+        border-color: rgba(37, 99, 235, 0.35);
+        box-shadow: 0 0 0 1px rgba(59, 130, 246, 0.12);
       }
       main {
         padding: 2.5rem clamp(1.5rem, 4vw, 4rem);
@@ -592,6 +658,9 @@
         display: flex;
         align-items: center;
         gap: 0.6rem;
+        flex-shrink: 0;
+        flex-wrap: wrap;
+        justify-content: flex-end;
       }
       .user-chip span {
         font-size: 0.9rem;
@@ -619,14 +688,14 @@
             <p class="brand-tagline">Premier Mac Studio & Ops</p>
           </div>
         </div>
-        <nav>
+        <nav aria-label="Main navigation">
           <div class="nav-links">
-            <a href="/">Dashboard</a>
-            <a href="/inventory">Inventory</a>
-            <a href="/sales/new">New Sale</a>
-            <a href="/sales">Sales</a>
-            <a href="/bookings">Bookings</a>
-            <a href="/store">Showroom</a>
+            <a href="/"<?= nav_attrs('/', $navPath) ?>>Dashboard</a>
+            <a href="/inventory"<?= nav_attrs('/inventory', $navPath) ?>>Inventory</a>
+            <a href="/sales/new"<?= nav_attrs('/sales/new', $navPath) ?>>New Sale</a>
+            <a href="/sales"<?= nav_attrs('/sales', $navPath) ?>>Sales</a>
+            <a href="/bookings"<?= nav_attrs('/bookings', $navPath) ?>>Bookings</a>
+            <a href="/store"<?= nav_attrs('/store', $navPath) ?>>Showroom</a>
           </div>
         </nav>
         <div class="user-chip">

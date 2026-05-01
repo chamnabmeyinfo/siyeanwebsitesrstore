@@ -3,13 +3,14 @@ Siyean@12345$$
 
 
 ssh srmacshop
-cd ~/public_html/siyean
+cd ~/public_html/siyean-laravel
 git pull origin main
 
 
-php scripts/create_user.php --name='Store Owner 2' --email='longsiyean.login@gmail.com' --password='TempLogin123!' --role=admin
+php scripts/create_user.php --name='Store Owner 2' --email='longsiyean.info@gmail.com' --password='TempLogin123!' --role=admin
 
 
-php artisan serve
+php artisan serve # for Launch website serer locally.
+php artisan migrate # sor Migrate Dtabase
 
 
