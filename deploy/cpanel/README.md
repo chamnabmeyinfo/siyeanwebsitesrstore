@@ -4,10 +4,13 @@ Repo layout assumed (matches cPanel *Git Version Control* default):
 
 ```
 /home/<user>/repositories/siyeanwebsitesrstore/
-    siyean/                 ← legacy SR Mac Shop POS app (PHP + SQLite, no framework)
-    siyean-laravel/         ← Laravel 12 wrapper that bridges into ../siyean/
+    siyean-laravel/         ← primary project: Laravel 12, Artisan, public/, scripts/
+    siyean/                 ← legacy POS / storefront (PHP + SQLite); loaded by the bridge
     deploy/cpanel/          ← these deployment files
 ```
+
+**Treat `siyean-laravel/` as your main `cd` target** (Artisan, `php scripts/…`,
+deployment). `siyean/` holds the bundled legacy source and `storage/pos.db`.
 
 The goal: serve `srmacshop.com` from this repo via `~/public_html`.
 
@@ -38,66 +41,9 @@ Browser  →  Cloudflare  →  LiteSpeed  →  ~/public_html/  →  siyean-larav
 
 ---
 
-## Step 1 — Set up the legacy SR Mac Shop app (`siyean/`)
+## Step 1 — Set up the Laravel project (`siyean-laravel/`)
 
 In cPanel **Terminal**:
-
-```bash
-cd ~/repositories/siyeanwebsitesrstore/siyean
-
-# Install vendor/ for the legacy app (it has its own composer.json)
-composer install --no-dev --optimize-autoloader
-
-# Create the SQLite database file the app expects
-mkdir -p storage
-touch  storage/pos.db
-chmod 775 storage
-chmod 664 storage/pos.db
-
-# (Optional) custom config — only needed for email / Telegram notifications
-cp config/app.example.php config/app.php
-nano config/app.php
-
-# Create your first admin account
-php scripts/create_user.php \
-    --name="Owner" \
-    --email="owner@srmacshop.com" \
-    --password="<a-strong-password>" \
-    --role=admin
-
-# (Optional) seed sample inventory + demo data so the storefront isn't empty
-php scripts/seed_inventory.php
-# OR for a fuller demo dataset:
-php scripts/seed_demo_data.php
-```
-
-After this, `siyean/storage/pos.db` is the source of truth for **products,
-sales, customers, bookings, users, store-menu**.
-
-> Roles available: `admin` (full access incl. delete/import), `clerk`
-> (sales + inventory edit), `ecommerce` (bookings console).
-
-### List staff users and reset a password
-
-SSH into the server, then:
-
-```bash
-cd ~/repositories/siyeanwebsitesrstore/siyean
-
-# See id, name, email, role, created_at (no password data)
-php scripts/list_users.php
-
-# Set a new password for an existing email from the list above
-php scripts/reset_password.php \
-    --email="owner@srmacshop.com" \
-    --password="<new-strong-password>"
-```
-
-`reset_password.php` updates `password_hash` only; it does not create users. For a new account, use `create_user.php`.
-
----
-
-## Step 2 — Set up the Laravel wrapper (`siyean-laravel/`)
 
 ```bash
 cd ~/repositories/siyeanwebsitesrstore/siyean-laravel
@@ -145,6 +91,63 @@ chmod -R 775 storage bootstrap/cache
 
 Important: **after editing `.env` ever again**, run `php artisan
 config:clear && php artisan config:cache`.
+
+---
+
+## Step 2 — Set up the legacy SR Mac Shop app (`siyean/`)
+
+The live storefront and staff UI run from this folder via the Laravel bridge.
+
+```bash
+cd ~/repositories/siyeanwebsitesrstore/siyean
+
+composer install --no-dev --optimize-autoloader
+
+mkdir -p storage
+touch  storage/pos.db
+chmod 775 storage
+chmod 664 storage/pos.db
+
+# (Optional) custom config — only needed for email / Telegram notifications
+cp config/app.example.php config/app.php
+nano config/app.php
+
+# (Optional) seed sample inventory + demo data so the storefront isn't empty
+php scripts/seed_inventory.php
+# OR for a fuller demo dataset:
+php scripts/seed_demo_data.php
+```
+
+After this, `siyean/storage/pos.db` is the source of truth for **products,
+sales, customers, bookings, users, store-menu**.
+
+> Roles available: `admin` (full access incl. delete/import), `clerk`
+> (sales + inventory edit), `ecommerce` (bookings console).
+
+### Staff accounts — create, list, reset (run from `siyean-laravel/`)
+
+Use the project-root wrappers so your working directory stays **`siyean-laravel/`**:
+
+```bash
+cd ~/repositories/siyeanwebsitesrstore/siyean-laravel
+
+# Create your first admin (one-off)
+php scripts/create_user.php \
+    --name="Owner" \
+    --email="owner@srmacshop.com" \
+    --password="<a-strong-password>" \
+    --role=admin
+
+# See id, name, email, role, created_at (no password data)
+php scripts/list_users.php
+
+# Set a new password for an existing email from the list above
+php scripts/reset_password.php \
+    --email="owner@srmacshop.com" \
+    --password="<new-strong-password>"
+```
+
+`reset_password.php` updates `password_hash` only; it does not create users.
 
 ---
 
@@ -204,7 +207,7 @@ curl -sI https://srmacshop.com/login | head -3       # expect HTTP/2 200
 
 In a browser:
 - `https://srmacshop.com/` — public storefront (SR Mac Shop)
-- `https://srmacshop.com/login` — staff sign-in (use the admin user from Step 1)
+- `https://srmacshop.com/login` — staff sign-in (admin user from Step 2)
 - After login: `/dashboard`, `/inventory`, `/sales`, `/sales/new`,
   `/bookings`, `/inventory/import`, `/inventory/export`
 
@@ -216,9 +219,9 @@ In a browser:
 cd ~/repositories/siyeanwebsitesrstore
 git pull
 
-# Reinstall vendors only if composer.json/.lock changed
-[ -d siyean/vendor ]         || (cd siyean         && composer install --no-dev --optimize-autoloader)
+# Reinstall vendors only if composer.json/.lock changed (project root first)
 [ -d siyean-laravel/vendor ] || (cd siyean-laravel && composer install --no-dev --optimize-autoloader)
+[ -d siyean/vendor ]         || (cd siyean         && composer install --no-dev --optimize-autoloader)
 
 cd siyean-laravel
 php artisan migrate --force

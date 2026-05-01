@@ -10,9 +10,10 @@
   </label>
   <button type="submit">Sign in</button>
   <p style="margin-top:1rem;color:#94a3b8;font-size:0.85rem;">
-    Need access? On the server: <code>php scripts/list_users.php</code> shows accounts,
-    <code>php scripts/reset_password.php</code> sets a new password,
-    <code>php scripts/create_user.php</code> adds a user.
+    Need access? On the server, from the <code>siyean-laravel/</code> folder:
+    <code>php scripts/list_users.php</code>,
+    <code>php scripts/reset_password.php</code>,
+    <code>php scripts/create_user.php</code>.
   </p>
 </form>
 

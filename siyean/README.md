@@ -1,6 +1,15 @@
 ## POS for Mac Sales (PHP)
 
-This repository ships a PHP 8.2 + SQLite web application for tracking MacBook inventory and sales. Everything runs locally—no external SaaS—and the UI is optimized for a single in-store operator.
+This folder is the **legacy** SR Mac Shop app (PHP 8.2 + SQLite). It is bundled
+next to the main project in [`../siyean-laravel/`](../siyean-laravel/) — that
+Laravel app is the deployment entry point and forwards HTTP requests here.
+
+Day-to-day setup commands are documented in `../siyean-laravel/README.md`; you
+can also run the same CLI scripts from `siyean-laravel/scripts/` (wrappers).
+
+---
+
+This application tracks MacBook inventory and sales. Everything runs locally—no external SaaS—and the UI is optimized for a single in-store operator.
 
 ### Highlights
 
@@ -19,6 +28,11 @@ This repository ships a PHP 8.2 + SQLite web application for tracking MacBook in
 - Composer.
 
 ### Getting started
+
+If you use the repo’s Laravel app (`../siyean-laravel/`), follow that README:
+your working directory is **`siyean-laravel/`**, and the same CLI commands exist
+as `php scripts/*.php` there (wrappers). The steps below apply when developing
+**this folder alone** (`composer serve`).
 
 1. Install dependencies:
    ```
@@ -48,6 +62,7 @@ This repository ships a PHP 8.2 + SQLite web application for tracking MacBook in
    ```
    php scripts/list_users.php
    ```
+   (From `../siyean-laravel/`, same filenames under `scripts/`.)
 
    To reset an existing user’s password (same SQLite DB as login):
 

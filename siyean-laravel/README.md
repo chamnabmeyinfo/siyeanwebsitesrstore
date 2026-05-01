@@ -1,72 +1,54 @@
 # SR Mac Shop — Application
 
-This repository contains two pieces:
+**This folder (`siyean-laravel/`) is the project root:** composer/Artisan,
+deployment (`public/`), and `scripts/` wrappers for staff/SQLite tasks all live
+here.
 
-1. **`../siyean/`** — the SR Mac Shop POS / storefront / bookings application.
-   Plain PHP 8.2 + SQLite, no framework. This is the actual product.
-2. **`./` (this folder, `siyean-laravel/`)** — a Laravel 12 wrapper. Every
-   inbound HTTP request is forwarded into `../siyean/public/index.php` by
-   `app/Http/Controllers/LegacyBridgeController`. Laravel handles routing,
-   middleware, errors, asset pipeline, and future framework-based features.
+**`../siyean/`** holds the legacy POS / storefront / bookings code (PHP + SQLite,
+no framework). Every HTTP request is bridged into `../siyean/public/index.php` via
+`app/Http/Controllers/LegacyBridgeController`. Laravel supplies the front
+controller, middleware, configuration, and future framework features.
 
 ## Local Development
 
+Work from **`siyean-laravel/`**:
+
 ```bash
-# 1. Install dependencies for both apps
-cd siyean
-composer install
-cd ../siyean-laravel
+cd siyean-laravel
 composer install
 cp .env.example .env
 php artisan key:generate
 
-# 2. Initialise the legacy app's SQLite database
-mkdir -p ../siyean/storage
-touch ../siyean/storage/pos.db
+# Legacy app: dependencies + SQLite (still stored under ../siyean/storage/)
+cd ../siyean && composer install && mkdir -p storage && touch storage/pos.db && cd ../siyean-laravel
 
-# 3. Create at least one admin user
-php ../siyean/scripts/create_user.php \
+# Staff accounts (wrappers call ../siyean/scripts/*.php)
+php scripts/create_user.php \
     --name="Owner" --email="owner@example.com" \
     --password="ChangeMe123!" --role=admin
 
-# 4. (Optional) seed sample inventory
-php ../siyean/scripts/seed_inventory.php
+# Optional: sample inventory
+php scripts/seed_inventory.php
 
-# 5. Start the dev server
 php artisan serve
-# Visit http://127.0.0.1:8000/         (public storefront)
-#       http://127.0.0.1:8000/login    (staff login)
+# http://127.0.0.1:8000/       storefront
+# http://127.0.0.1:8000/login  staff
 ```
 
-See `../siyean/README.md` for the full feature list and CLI scripts.
+Other CLI tools: `php scripts/list_users.php`, `php scripts/reset_password.php`,
+`php scripts/seed_demo_data.php`.
+
+See `../siyean/README.md` for POS feature detail (optional reading).
 
 ## Deploying to cPanel
 
 End-to-end runbook: [`../deploy/cpanel/README.md`](../deploy/cpanel/README.md).
 
-Short version of what the server needs:
+Short version (project root = **`siyean-laravel/`**):
 
 ```bash
-cd ~/repositories/siyeanwebsitesrstore
+cd ~/repositories/siyeanwebsitesrstore/siyean-laravel
 
-# Legacy app
-cd siyean
-composer install --no-dev --optimize-autoloader
-mkdir -p storage
-touch  storage/pos.db
-chmod 775 storage
-chmod 664 storage/pos.db
-
-# Create admin user (one-off)
-php scripts/create_user.php --name="Owner" \
-    --email="owner@srmacshop.com" --password="<strong>" --role=admin
-
-# List staff / reset password (SSH on server)
-# php ../siyean/scripts/list_users.php
-# php ../siyean/scripts/reset_password.php --email="owner@srmacshop.com" --password="<new>"
-
-# Laravel wrapper
-cd ../siyean-laravel
 composer install --no-dev --optimize-autoloader
 cp .env.example .env       # then edit .env (APP_ENV, DB, etc.)
 php artisan key:generate
@@ -76,6 +58,21 @@ php artisan config:cache
 php artisan route:cache
 php artisan view:cache
 chmod -R 775 storage bootstrap/cache
+
+# Legacy app (SQLite + vendors), required for the live site
+cd ../siyean
+composer install --no-dev --optimize-autoloader
+mkdir -p storage
+touch  storage/pos.db
+chmod 775 storage
+chmod 664 storage/pos.db
+cd ../siyean-laravel
+
+# Staff users — run from siyean-laravel/scripts/
+php scripts/create_user.php --name="Owner" \
+    --email="owner@srmacshop.com" --password="<strong>" --role=admin
+# php scripts/list_users.php
+# php scripts/reset_password.php --email="owner@srmacshop.com" --password="<new>"
 ```
 
 Wire `~/public_html` to Laravel's `public/` once (see deploy guide for both
@@ -100,10 +97,11 @@ the symlink and forwarder approaches).
 
 ## Production Checklist
 
-- [ ] `siyean/` has `composer install --no-dev --optimize-autoloader` done
+- [ ] `siyean-laravel/` — `composer install`, `.env`, migrations, caches (above)
+- [ ] `siyean/` — `composer install --no-dev --optimize-autoloader`
 - [ ] `siyean/storage/pos.db` exists and is writable (664)
-- [ ] At least one admin user created via `siyean/scripts/create_user.php`
-      (`siyean/scripts/list_users.php` / `reset_password.php`)
+- [ ] At least one staff user via `php scripts/create_user.php` (from
+      `siyean-laravel/`); list/reset: `list_users.php`, `reset_password.php`
 - [ ] Optional: `siyean/config/app.php` set up (see `app.example.php`) for
       email / Telegram notifications
 - [ ] Laravel `.env` has `APP_ENV=production`, `APP_DEBUG=false`,
