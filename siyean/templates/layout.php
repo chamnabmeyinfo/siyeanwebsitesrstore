@@ -386,8 +386,14 @@ function user_initials(string $name): string
         border-color: rgba(37, 99, 235, 0.25);
         box-shadow: 0 2px 10px rgba(37, 99, 235, 0.15);
       }
-      main {
-        padding: 2.5rem clamp(1.5rem, 4vw, 4rem);
+      main.main-shell {
+        padding: 1.75rem clamp(1.25rem, 4vw, 3rem) 3rem;
+        max-width: 1180px;
+        margin-left: auto;
+        margin-right: auto;
+        display: flex;
+        flex-direction: column;
+        gap: 1.35rem;
       }
       .flash {
         padding: 0.85rem 1rem;
@@ -549,7 +555,7 @@ function user_initials(string $name): string
         display: flex;
         gap: 0.5rem;
         flex-wrap: wrap;
-        margin: 1rem 0;
+        margin: 0;
       }
       .pill {
         padding: 0.35rem 0.85rem;
@@ -557,6 +563,151 @@ function user_initials(string $name): string
         border: 1px solid rgba(148, 163, 184, 0.3);
         color: var(--text-color);
         font-size: 0.85rem;
+      }
+      .dashboard {
+        display: flex;
+        flex-direction: column;
+        gap: 1.35rem;
+      }
+      .demo-ribbon {
+        display: flex;
+        align-items: flex-start;
+        gap: 0.65rem;
+        padding: 0.65rem 1rem;
+        border-radius: 0.75rem;
+        font-size: 0.85rem;
+        line-height: 1.45;
+        color: var(--text-color);
+        background: rgba(59, 130, 246, 0.12);
+        border: 1px solid rgba(59, 130, 246, 0.28);
+        box-shadow: 0 8px 24px rgba(37, 99, 235, 0.08);
+      }
+      :root[data-theme="light"] .demo-ribbon {
+        background: rgba(59, 130, 246, 0.08);
+      }
+      .demo-ribbon strong {
+        color: var(--chip-color);
+      }
+      .dashboard-hero {
+        display: grid;
+        grid-template-columns: minmax(0, 1fr) minmax(160px, 240px);
+        gap: 1.25rem;
+        align-items: stretch;
+        padding: 1.35rem 1.35rem 1.35rem 1.5rem;
+        border-radius: 1.25rem;
+        background:
+          radial-gradient(ellipse 90% 70% at 12% 18%, rgba(59, 130, 246, 0.35), transparent 52%),
+          radial-gradient(ellipse 70% 55% at 88% 82%, rgba(14, 165, 233, 0.18), transparent 50%),
+          linear-gradient(155deg, rgba(15, 23, 42, 0.92), rgba(2, 6, 23, 0.96));
+        border: 1px solid rgba(96, 165, 250, 0.22);
+        box-shadow: 0 24px 48px rgba(2, 6, 23, 0.45);
+      }
+      :root[data-theme="light"] .dashboard-hero {
+        background:
+          radial-gradient(ellipse 90% 70% at 12% 18%, rgba(59, 130, 246, 0.2), transparent 52%),
+          linear-gradient(165deg, #ffffff, #f1f5f9);
+        border-color: rgba(15, 23, 42, 0.08);
+        box-shadow: 0 18px 40px rgba(15, 23, 42, 0.08);
+      }
+      .dashboard-hero-copy h2 {
+        margin: 0.35rem 0 0;
+        font-size: clamp(1.35rem, 3vw, 1.85rem);
+        font-weight: 700;
+        letter-spacing: -0.03em;
+        line-height: 1.2;
+      }
+      .dashboard-hero-copy .lead {
+        margin: 0.65rem 0 0;
+        color: var(--muted);
+        font-size: 0.95rem;
+        max-width: 34rem;
+        line-height: 1.55;
+      }
+      .dashboard-hero-visual {
+        border-radius: 1rem;
+        background: linear-gradient(140deg, rgba(59, 130, 246, 0.25), rgba(15, 23, 42, 0.6));
+        border: 1px solid rgba(148, 163, 184, 0.15);
+        min-height: 120px;
+        position: relative;
+        overflow: hidden;
+      }
+      :root[data-theme="light"] .dashboard-hero-visual {
+        background: linear-gradient(140deg, rgba(59, 130, 246, 0.15), rgba(241, 245, 249, 0.9));
+        border-color: rgba(15, 23, 42, 0.06);
+      }
+      .dashboard-hero-visual::after {
+        content: "";
+        position: absolute;
+        inset: 20%;
+        border-radius: 50%;
+        background: radial-gradient(circle, rgba(147, 197, 253, 0.35), transparent 68%);
+        filter: blur(8px);
+      }
+      .stat-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+        gap: 1rem;
+      }
+      .stat-card {
+        position: relative;
+        padding: 1.1rem 1.15rem;
+        border-radius: 1rem;
+        background: var(--card-bg);
+        border: 1px solid var(--panel-border);
+        box-shadow: 0 12px 28px rgba(2, 6, 23, 0.12);
+        overflow: hidden;
+      }
+      .stat-card::before {
+        content: "";
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        height: 3px;
+        background: linear-gradient(90deg, #2563eb, #38bdf8);
+        opacity: 0.85;
+      }
+      .stat-card h3 {
+        margin: 0;
+        font-size: 0.72rem;
+        font-weight: 600;
+        letter-spacing: 0.08em;
+        text-transform: uppercase;
+        color: var(--muted);
+      }
+      .stat-card .stat-value {
+        margin: 0.5rem 0 0;
+        font-size: clamp(1.45rem, 3vw, 1.85rem);
+        font-weight: 700;
+        letter-spacing: -0.03em;
+        font-variant-numeric: tabular-nums;
+      }
+      .stat-card.stat-muted::before {
+        opacity: 0.35;
+      }
+      .table-panel {
+        margin-top: 0;
+      }
+      .table-panel h3 {
+        margin: 0 0 0.75rem;
+        font-size: 1.05rem;
+        font-weight: 600;
+      }
+      .table-wrap {
+        overflow-x: auto;
+        margin-top: 0.25rem;
+        border-radius: 0.65rem;
+      }
+      .table-wrap table {
+        margin-top: 0;
+      }
+      @media (max-width: 720px) {
+        .dashboard-hero {
+          grid-template-columns: 1fr;
+        }
+        .dashboard-hero-visual {
+          min-height: 96px;
+        }
       }
       .showroom-hero {
         position: relative;
@@ -981,7 +1132,7 @@ function user_initials(string $name): string
         </div>
       </div>
     </header>
-    <main>
+    <main class="main-shell">
       <?php if ($flash): ?>
         <div class="flash <?= htmlspecialchars($flash['status'] ?? 'success') ?>">
           <?= htmlspecialchars($flash['message'] ?? '') ?>
