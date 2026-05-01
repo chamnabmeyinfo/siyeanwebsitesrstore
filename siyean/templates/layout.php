@@ -21,6 +21,20 @@ function nav_attrs(string $href, string $current): string
 {
     return nav_link_active($href, $current) ? ' class="active" aria-current="page"' : '';
 }
+
+function user_initials(string $name): string
+{
+    $name = trim($name);
+    if ($name === '') {
+        return '?';
+    }
+    $parts = preg_split('/\s+/', $name, -1, PREG_SPLIT_NO_EMPTY);
+    if (count($parts) >= 2) {
+        return strtoupper(substr($parts[0], 0, 1) . substr($parts[count($parts) - 1], 0, 1));
+    }
+
+    return strtoupper(substr($name, 0, min(2, strlen($name))));
+}
 ?>
 <!DOCTYPE html>
 <html lang="en" data-theme="system">
@@ -713,27 +727,38 @@ function nav_attrs(string $href, string $current): string
         border: 1px solid var(--panel-border);
       }
       .theme-toggle {
-        display: flex;
-        gap: 0.25rem;
+        display: inline-flex;
+        gap: 0;
         align-items: center;
-        padding: 0.2rem;
+        padding: 0.1rem;
         border-radius: 999px;
         background: rgba(2, 6, 23, 0.28);
         border: 1px solid rgba(148, 163, 184, 0.12);
+        flex-shrink: 0;
       }
       :root[data-theme="light"] .theme-toggle {
         background: rgba(15, 23, 42, 0.05);
         border-color: rgba(15, 23, 42, 0.08);
       }
       .theme-btn {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
         background: transparent;
         border: 1px solid transparent;
-        padding: 0.38rem 0.72rem;
+        padding: 0.2rem;
+        min-width: 1.65rem;
+        min-height: 1.65rem;
         border-radius: 999px;
         color: var(--muted);
         cursor: pointer;
-        font-size: 0.8125rem;
+        line-height: 0;
         transition: background 0.18s ease, border-color 0.18s ease, color 0.18s ease;
+      }
+      .theme-btn svg {
+        width: 13px;
+        height: 13px;
+        flex-shrink: 0;
       }
       .theme-btn.active {
         border-color: rgba(59, 130, 246, 0.7);
@@ -745,29 +770,67 @@ function nav_attrs(string $href, string $current): string
         background: rgba(59, 130, 246, 0.08);
       }
       .user-chip {
-        display: flex;
+        display: inline-flex;
         align-items: center;
-        gap: 0.65rem;
+        gap: 0.3rem;
         flex-shrink: 0;
-        flex-wrap: wrap;
+        min-width: 0;
+        flex-wrap: nowrap;
         justify-content: flex-end;
       }
       .header-actions {
-        padding-left: clamp(0.5rem, 2vw, 1.25rem);
-        margin-left: clamp(0.25rem, 1vw, 0.75rem);
+        padding-left: 0.35rem;
+        margin-left: 0.3rem;
         border-left: 1px solid var(--header-divider);
       }
-      .user-chip span {
-        font-size: 0.9rem;
-        color: var(--muted);
+      .user-avatar {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        width: 1.65rem;
+        height: 1.65rem;
+        border-radius: 999px;
+        font-size: 0.58rem;
+        font-weight: 700;
+        letter-spacing: 0.03em;
+        line-height: 1;
+        background: rgba(59, 130, 246, 0.22);
+        border: 1px solid rgba(96, 165, 250, 0.38);
+        color: var(--text-color);
+        flex-shrink: 0;
+        cursor: default;
+      }
+      :root[data-theme="light"] .user-avatar {
+        background: rgba(59, 130, 246, 0.12);
+        border-color: rgba(37, 99, 235, 0.22);
       }
       .user-chip form {
         margin: 0;
+        flex-shrink: 0;
       }
       .user-chip button {
         margin-top: 0;
-        padding: 0.45rem 0.9rem;
-        font-size: 0.85rem;
+      }
+      .user-chip .header-logout {
+        padding: 0.2rem 0.32rem;
+        min-width: 1.85rem;
+        min-height: 1.65rem;
+        border-radius: 0.55rem;
+        margin-top: 0;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+      }
+      .user-chip .header-logout svg {
+        width: 14px;
+        height: 14px;
+        flex-shrink: 0;
+      }
+      .user-chip .link-btn {
+        padding: 0.22rem 0.5rem;
+        font-size: 0.72rem;
+        border-radius: 999px;
+        white-space: nowrap;
       }
     </style>
   </head>
@@ -796,15 +859,26 @@ function nav_attrs(string $href, string $current): string
           </div>
         </nav>
         <div class="user-chip header-actions">
-          <div class="theme-toggle">
-            <button class="theme-btn" data-theme="light">Light</button>
-            <button class="theme-btn" data-theme="dark">Dark</button>
-            <button class="theme-btn active" data-theme="system">System</button>
+          <div class="theme-toggle" role="group" aria-label="Color theme">
+            <button type="button" class="theme-btn" data-theme="light" title="Light" aria-label="Light theme">
+              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><circle cx="12" cy="12" r="4"/><path stroke-linecap="round" d="M12 2v2m0 14v2M4.93 4.93l1.41 1.41m11.32 11.32 1.41 1.41M2 12h2m14 0h2M4.93 19.07l1.41-1.41M17.66 6.34l1.41-1.41"/></svg>
+            </button>
+            <button type="button" class="theme-btn" data-theme="dark" title="Dark" aria-label="Dark theme">
+              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" d="M21 12.79A9 9 0 1111.21 3 7 7 0 0021 12.79z"/></svg>
+            </button>
+            <button type="button" class="theme-btn active" data-theme="system" title="System (match device)" aria-label="System theme">
+              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><rect x="2" y="3" width="20" height="14" rx="2" ry="2"/><path stroke-linecap="round" d="M8 21h8m-4-4v4"/></svg>
+            </button>
           </div>
           <?php if (!empty($currentUser)): ?>
-            <span><?= htmlspecialchars($currentUser['name']) ?> · <?= strtoupper(htmlspecialchars($currentUser['role'])) ?></span>
+            <?php
+            $userLabel = htmlspecialchars($currentUser['name']) . ' · ' . strtoupper(htmlspecialchars($currentUser['role']));
+            ?>
+            <span class="user-avatar" title="<?= $userLabel ?>"><?= htmlspecialchars(user_initials($currentUser['name'])) ?></span>
             <form method="post" action="/logout">
-              <button type="submit" class="ghost-btn danger">Logout</button>
+              <button type="submit" class="ghost-btn danger header-logout" aria-label="Log out" title="Log out">
+                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" d="M15.75 9V5.25A2.25 2.25 0 0013.5 3h-6a2.25 2.25 0 00-2.25 2.25v13.5A2.25 2.25 0 007.5 21h6a2.25 2.25 0 002.25-2.25V15M18 9l3 3m0 0l-3 3m3-3H9"/></svg>
+              </button>
             </form>
           <?php else: ?>
             <a href="/login" class="link-btn">Sign in</a>
