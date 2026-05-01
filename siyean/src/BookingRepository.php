@@ -39,7 +39,7 @@ final class BookingRepository
         return (int) $this->db->lastInsertId();
     }
 
-    public function findAll(string $status = null): array
+    public function findAll(?string $status = null): array
     {
         $sql = 'SELECT b.*, i.model, i.sku FROM bookings b JOIN inventory i ON b.inventory_id = i.id';
         $params = [];
