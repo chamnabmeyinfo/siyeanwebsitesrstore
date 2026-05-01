@@ -41,12 +41,12 @@
 
 1. `composer install` to pull autoload files.
 2. `composer serve` to boot the dev server (first request runs migrations automatically).
-3. `/login` authenticates admins/clerks/ecommerce managers; `/logout` ends the session.
-4. `/inventory` handles SKU creation, adjustment, import/export (delete/import restricted to admins).
-5. `/sales/new` records in-store sales and auto-decrements inventory.
-6. `/sales` and `/` provide history + dashboard summaries.
-7. `/store` exposes the catalogue with product detail pages and booking forms.
-8. `/bookings` (admin) manages reservations, conversions to sales, and sends notifications.
+3. `/login` authenticates admins/clerks/ecommerce managers; `/logout` ends the session (returns visitors to the public shop home).
+4. `/` and `/store` serve the public storefront catalog (same content); product URLs stay under `/store/product`.
+5. `/dashboard` (signed-in) shows POS metrics; `/inventory` handles SKU creation, adjustment, import/export (delete/import restricted to admins).
+6. `/sales/new` records in-store sales and auto-decrements inventory.
+7. `/sales` provides sales history alongside dashboard summaries on `/dashboard`.
+8. Bookings: customers use `/store/product` + `/store/book`; staff use `/bookings` for confirmations and notifications.
 
 ### Non-goals (v1)
 

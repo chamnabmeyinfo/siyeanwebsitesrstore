@@ -28,7 +28,7 @@ final class HttpKernel
         switch (true) {
             case $method === 'GET' && $requestPath === '/login':
                 if ($this->auth->user()) {
-                    $this->view->redirect('/');
+                    $this->view->redirect('/dashboard');
                 }
                 $this->view->render('auth_login.php', ['layout' => 'auth']);
                 break;
@@ -43,6 +43,10 @@ final class HttpKernel
                 break;
 
             case $method === 'GET' && $requestPath === '/':
+                $this->renderPublicStorefront();
+                break;
+
+            case $method === 'GET' && $requestPath === '/dashboard':
                 $this->auth->requireAuth($this->view);
                 $dashboard = DashboardViewModel::build(
                     $this->app->report->summary(),
@@ -139,7 +143,7 @@ final class HttpKernel
                 break;
 
             case $method === 'GET' && $requestPath === '/store':
-                $this->view->render('store.php', ['items' => $this->app->inventory->all(true), 'layout' => 'store']);
+                $this->renderPublicStorefront();
                 break;
 
             case $method === 'GET' && str_starts_with($requestPath, '/store/product'):
@@ -176,7 +180,7 @@ final class HttpKernel
         $_SESSION['user_id'] = $user['id'];
         session_regenerate_id(true);
         $this->view->flash('success', 'Welcome back!');
-        $this->view->redirect('/');
+        $this->view->redirect('/dashboard');
     }
 
     private function handleLogoutPost(): void
@@ -184,7 +188,15 @@ final class HttpKernel
         unset($_SESSION['user_id']);
         session_regenerate_id(true);
         $this->view->flash('success', 'Signed out successfully.');
-        $this->view->redirect('/login');
+        $this->view->redirect('/');
+    }
+
+    private function renderPublicStorefront(): void
+    {
+        $this->view->render('store.php', [
+            'items' => $this->app->inventory->all(true),
+            'layout' => 'store',
+        ]);
     }
 
     private function handleInventoryCreate(): void
@@ -418,7 +430,7 @@ final class HttpKernel
     {
         $slug = trim($_GET['slug'] ?? '');
         if ($slug === '') {
-            $this->view->redirect('/store');
+            $this->view->redirect('/');
         }
         $product = $this->app->inventory->findVisibleOnlineBySlug($slug);
         if (!$product) {
@@ -451,13 +463,13 @@ final class HttpKernel
             || $payload['customer_phone'] === ''
         ) {
             $this->view->flash('error', 'Please complete all required fields.');
-            $this->view->redirect('/store');
+            $this->view->redirect('/');
         }
 
         $product = $this->app->inventory->findVisibleOnlineSummaryById($payload['inventory_id']);
         if (!$product) {
             $this->view->flash('error', 'Item not found or unavailable.');
-            $this->view->redirect('/store');
+            $this->view->redirect('/');
         }
 
         if ($payload['quantity'] > (int) $product['quantity_on_hand']) {

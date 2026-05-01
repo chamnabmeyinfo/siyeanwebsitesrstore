@@ -567,7 +567,7 @@
         </div>
         <nav>
           <div class="nav-links">
-            <a href="/store">Showroom</a>
+            <a href="/">Shop home</a>
           </div>
         </nav>
       </div>

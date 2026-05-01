@@ -93,7 +93,7 @@ $primaryMedia = $mediaItems[0] ?? null;
 <section class="product-showcase">
   <div class="showcase-grid">
     <div class="showcase-media">
-      <a href="/store" class="link-btn">← Back to showroom</a>
+      <a href="/" class="link-btn">← Back to shop</a>
       <div class="media-gallery">
         <div class="media-tray" data-role="media-tray">
           <?php foreach ($mediaItems as $index => $media): ?>

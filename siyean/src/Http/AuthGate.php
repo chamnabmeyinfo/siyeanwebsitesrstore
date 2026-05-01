@@ -50,13 +50,16 @@ final class AuthGate
         }
         if ($roles && !in_array($user['role'], $roles, true)) {
             $respond->flash('error', 'You are not authorized to perform this action.');
-            $respond->redirect('/');
+            $respond->redirect('/dashboard');
         }
     }
 
     public function isPublicRoute(string $method, string $path): bool
     {
         if ($path === '/login' && in_array($method, ['GET', 'POST'], true)) {
+            return true;
+        }
+        if ($path === '/') {
             return true;
         }
         if (str_starts_with($path, '/store')) {

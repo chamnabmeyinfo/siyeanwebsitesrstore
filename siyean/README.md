@@ -28,12 +28,11 @@ This repository ships a PHP 8.2 + SQLite web application for tracking MacBook in
    ```
    composer serve
    ```
-3. Visit http://127.0.0.1:8000/ to access:
-   - Dashboard (`/`)
+3. Visit http://127.0.0.1:8000/ for the **public shop** (same catalog as `/store`). Staff sign in at `/login`, then use:
+   - Dashboard (`/dashboard`)
    - Inventory manager (`/inventory`)
    - New sale form (`/sales/new`)
    - Sales history (`/sales`)
-   - Visitor showroom (`/store`)
 4. (Optional) Seed sample inventory:
    ```
    php scripts/seed_inventory.php

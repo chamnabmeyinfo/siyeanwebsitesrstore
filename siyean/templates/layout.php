@@ -4,8 +4,11 @@ $navPath = $request_path ?? (parse_url($_SERVER['REQUEST_URI'] ?? '/', PHP_URL_P
 
 function nav_link_active(string $href, string $current): bool
 {
+    if ($href === '/dashboard') {
+        return $current === '/dashboard';
+    }
     if ($href === '/') {
-        return $current === '/';
+        return $current === '/' || $current === '/store';
     }
     if ($href === '/sales/new') {
         return str_starts_with($current, '/sales/new');
@@ -1234,7 +1237,7 @@ function user_initials(string $name): string
     <header>
       <div class="main-header">
         <div class="brand">
-          <a class="brand-mark" href="/" title="SR Mac Shop — Dashboard" aria-label="SR Mac Shop, go to dashboard">
+          <a class="brand-mark" href="/dashboard" title="SR Mac Shop — Dashboard" aria-label="SR Mac Shop, go to dashboard">
             <div class="brand-logo">
               <img src="/assets/sr-mac-logo.svg" alt="" width="40" height="40" />
             </div>
@@ -1247,12 +1250,12 @@ function user_initials(string $name): string
         <nav aria-label="Main navigation">
           <div class="nav-shell">
             <div class="nav-links">
-              <a href="/"<?= nav_attrs('/', $navPath) ?>>Dashboard</a>
+              <a href="/dashboard"<?= nav_attrs('/dashboard', $navPath) ?>>Dashboard</a>
               <a href="/inventory"<?= nav_attrs('/inventory', $navPath) ?>>Inventory</a>
               <a href="/sales/new"<?= nav_attrs('/sales/new', $navPath) ?>>New Sale</a>
               <a href="/sales"<?= nav_attrs('/sales', $navPath) ?>>Sales</a>
               <a href="/bookings"<?= nav_attrs('/bookings', $navPath) ?>>Bookings</a>
-              <a href="/store"<?= nav_attrs('/store', $navPath) ?>>Showroom</a>
+              <a href="/"<?= nav_attrs('/', $navPath) ?>>Shop</a>
             </div>
           </div>
         </nav>
