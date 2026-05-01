@@ -1,4 +1,18 @@
-<?php ?>
+<?php
+$navPath = $request_path ?? (parse_url($_SERVER['REQUEST_URI'] ?? '/', PHP_URL_PATH) ?: '/');
+
+function store_nav_attrs(string $kind, string $current): string
+{
+    $active = match ($kind) {
+        'home' => in_array($current, ['/', '/store'], true),
+        'devices' => str_starts_with($current, '/store/product'),
+        'login' => str_starts_with($current, '/login'),
+        default => false,
+    };
+
+    return $active ? ' class="active" aria-current="page"' : '';
+}
+?>
 <!DOCTYPE html>
 <html lang="en">
   <head>
@@ -118,16 +132,25 @@
         font-weight: 500;
       }
 
+      .site-nav {
+        position: relative;
+        display: flex;
+        align-items: center;
+        justify-content: flex-end;
+      }
+
       .nav-links {
         display: flex;
-        gap: 0.4rem;
+        gap: 0.35rem;
         flex-wrap: wrap;
+        align-items: center;
+        justify-content: flex-end;
       }
 
       .nav-links a {
         text-decoration: none;
         color: var(--ink-soft);
-        padding: 0.45rem 1rem;
+        padding: 0.45rem 0.95rem;
         border-radius: 999px;
         border: 1px solid transparent;
         background: var(--surface-elevated);
@@ -140,6 +163,79 @@
         color: var(--accent);
         background: var(--accent-soft);
         border-color: rgba(37, 99, 235, 0.15);
+      }
+
+      .nav-links a.active {
+        color: var(--accent);
+        background: var(--accent-soft);
+        border-color: rgba(37, 99, 235, 0.22);
+      }
+
+      .nav-menu-btn {
+        display: none;
+        align-items: center;
+        justify-content: center;
+        gap: 0.4rem;
+        padding: 0.45rem 0.75rem;
+        border-radius: 10px;
+        border: 1px solid var(--line);
+        background: var(--surface);
+        color: var(--ink-soft);
+        font-family: inherit;
+        font-size: 0.8125rem;
+        font-weight: 700;
+        cursor: pointer;
+        transition: background 0.15s ease, border-color 0.15s ease, color 0.15s ease;
+      }
+
+      .nav-menu-btn:hover {
+        background: var(--surface-elevated);
+        color: var(--ink);
+        border-color: var(--line-strong);
+      }
+
+      .nav-menu-btn:focus-visible {
+        outline: 2px solid var(--accent);
+        outline-offset: 2px;
+      }
+
+      .nav-menu-btn svg {
+        width: 18px;
+        height: 18px;
+        flex-shrink: 0;
+      }
+
+      @media (max-width: 720px) {
+        .nav-menu-btn {
+          display: inline-flex;
+        }
+
+        .site-nav .nav-links {
+          display: none;
+          position: absolute;
+          right: 0;
+          top: calc(100% + 0.4rem);
+          min-width: 12.5rem;
+          flex-direction: column;
+          align-items: stretch;
+          padding: 0.4rem;
+          gap: 0.2rem;
+          background: var(--surface);
+          border: 1px solid var(--line);
+          border-radius: var(--radius);
+          box-shadow: var(--shadow-md);
+          z-index: 50;
+        }
+
+        .site-nav.is-open .nav-links {
+          display: flex;
+        }
+
+        .site-nav.is-open .nav-menu-btn {
+          border-color: rgba(37, 99, 235, 0.25);
+          color: var(--accent);
+          background: var(--accent-soft);
+        }
       }
 
       .login-launcher {
@@ -967,9 +1063,17 @@
             <p class="brand-tagline">Premier Mac Studio &amp; Concierge</p>
           </div>
         </div>
-        <nav aria-label="Shop">
-          <div class="nav-links">
-            <a href="/">Shop home</a>
+        <nav class="site-nav" id="site-nav" aria-label="Shop">
+          <button type="button" class="nav-menu-btn" aria-expanded="false" aria-controls="store-nav-menu">
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+              <path stroke-linecap="round" d="M4 7h16M4 12h16M4 17h16" />
+            </svg>
+            Menu
+          </button>
+          <div class="nav-links" id="store-nav-menu">
+            <a href="/"<?= store_nav_attrs('home', $navPath) ?>>Home</a>
+            <a href="/#inventory-list"<?= store_nav_attrs('devices', $navPath) ?>>Devices</a>
+            <a href="/login"<?= store_nav_attrs('login', $navPath) ?>>Sign in</a>
           </div>
         </nav>
       </div>
@@ -1041,6 +1145,58 @@
         launcher.addEventListener('mouseenter', () => clearTimeout(hideTimer));
         launcher.addEventListener('mouseleave', scheduleHide);
         launcher.addEventListener('focusout', scheduleHide);
+      })();
+
+      (function () {
+        const nav = document.getElementById('site-nav');
+        const btn = nav?.querySelector('.nav-menu-btn');
+        const mq = window.matchMedia('(max-width: 720px)');
+
+        if (!nav || !btn) {
+          return;
+        }
+
+        const setOpen = (open) => {
+          nav.classList.toggle('is-open', open);
+          btn.setAttribute('aria-expanded', open ? 'true' : 'false');
+        };
+
+        btn.addEventListener('click', () => {
+          if (!mq.matches) {
+            return;
+          }
+          setOpen(!nav.classList.contains('is-open'));
+        });
+
+        nav.querySelectorAll('#store-nav-menu a').forEach((link) => {
+          link.addEventListener('click', () => {
+            if (mq.matches) {
+              setOpen(false);
+            }
+          });
+        });
+
+        document.addEventListener('click', (e) => {
+          if (!mq.matches || !nav.classList.contains('is-open')) {
+            return;
+          }
+          if (e.target instanceof Node && !nav.contains(e.target)) {
+            setOpen(false);
+          }
+        });
+
+        document.addEventListener('keydown', (e) => {
+          if (e.key === 'Escape' && nav.classList.contains('is-open')) {
+            setOpen(false);
+            btn.focus();
+          }
+        });
+
+        mq.addEventListener('change', () => {
+          if (!mq.matches) {
+            setOpen(false);
+          }
+        });
       })();
     </script>
   </body>
