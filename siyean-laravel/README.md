@@ -105,13 +105,22 @@ PHPUnit lives in **`require-dev`**. Servers installed with
 `php artisan test` may say `Command "test" is not defined` — that is normal on
 production; you do not need to run tests there.
 
-Run tests on your PC or CI after a **full** `composer install`, then:
+Run tests on your PC or CI after a **full** `composer install`, from **`siyean-laravel/`**:
 
 ```bash
 php artisan test
 # or
 vendor/bin/phpunit tests/Feature/WebsiteAuthTest.php
 ```
+
+PHPUnit uses `tests/bootstrap.php` to set **`APP_BASE_PATH`** (this repo has two
+Composer roots; without it, Laravel can resolve the wrong base path) and to
+delete **`bootstrap/cache/routes-*.php`** so tests never use a stale
+**`route:cache`** from production (which would skip `/auth/*` and return **302**
+from the legacy app).
+
+After deploying route changes, rebuild or clear caches:
+`php artisan route:clear` or `php artisan route:cache`.
 
 `php artisan migrate --force` reporting **Nothing to migrate** means the
 database already matches your migrations — not an error.
