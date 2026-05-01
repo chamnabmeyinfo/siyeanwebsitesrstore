@@ -18,6 +18,14 @@ class User extends Authenticatable
     use HasFactory, Notifiable;
 
     /**
+     * Email verification is optional for storefront accounts; disable automatic sends until you add a verify flow.
+     */
+    public function sendEmailVerificationNotification(): void
+    {
+        //
+    }
+
+    /**
      * Get the attributes that should be cast.
      *
      * @return array<string, string>

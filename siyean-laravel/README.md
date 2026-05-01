@@ -78,10 +78,30 @@ php scripts/create_user.php --name="Owner" \
 Wire `~/public_html` to Laravel's `public/` once (see deploy guide for both
 the symlink and forwarder approaches).
 
+## Website accounts (Laravel / MySQL)
+
+Standard session auth lives **outside** the legacy app and uses the Laravel
+`users` table (MySQL):
+
+| URL | Purpose |
+|-----|---------|
+| `/auth/register` | Sign up |
+| `/auth/login` | Sign in |
+| `/auth/forgot-password` | Request password-reset email |
+| `/auth/reset-password/{token}` | Set new password (link from email) |
+| `/auth/account` | Signed-in profile + logout (when authenticated) |
+
+**Staff / POS** still uses **`/login`** and SQLite (`../siyean/storage/pos.db`)
+via the legacy bridge — same browser can hold both sessions independently.
+
+Password-reset emails require valid **`MAIL_*`** settings in `.env`. Automatic
+email verification on register is disabled until you add a verify flow (see
+`App\Models\User::sendEmailVerificationNotification`).
+
 ## How the bridge works
 
-- `routes/web.php` matches **every** path and forwards to
-  `LegacyBridgeController@handle`.
+- Explicit Laravel routes (for example `/auth/*`) are handled first; **all other**
+  paths match **`/{any?}`** and forward to `LegacyBridgeController@handle`.
 - The controller copies request data into `$_SERVER`, `$_GET`, `$_POST`,
   `$_FILES`, defines `LARAVEL_BRIDGE_MODE`, and `require`s
   `../siyean/public/index.php`.
@@ -91,9 +111,9 @@ the symlink and forwarder approaches).
 - Legacy redirects are signalled by throwing `RuntimeException` with a
   `__LEGACY_REDIRECT__:` prefix; the bridge converts those into a normal
   Laravel redirect response.
-- Laravel's CSRF middleware is **disabled site-wide** in `bootstrap/app.php`
-  because the legacy forms do not emit Laravel CSRF tokens. The legacy app
-  manages its own form security.
+- Laravel CSRF protection applies to `/auth/*` (Blade forms). The legacy
+  catch-all route skips CSRF middleware because legacy forms do not emit Laravel
+  tokens; the legacy app manages its own form security there.
 
 ## Production Checklist
 
@@ -106,6 +126,7 @@ the symlink and forwarder approaches).
       email / Telegram notifications
 - [ ] Laravel `.env` has `APP_ENV=production`, `APP_DEBUG=false`,
       `APP_URL=https://srmacshop.com`, `APP_KEY` generated
+- [ ] If using password reset: `MAIL_*` configured (same as transactional mail)
 - [ ] `siyean-laravel/storage/` and `bootstrap/cache/` writable (775)
 - [ ] `config:cache`, `route:cache`, `view:cache` run
 - [ ] `~/public_html` wired to `siyean-laravel/public/` (symlink or forwarder)

@@ -155,6 +155,14 @@ php scripts/reset_password.php \
 **Shell tip:** In Bash, double quotes expand `$` (e.g. `$$` becomes a process
 ID). Put passwords in **single quotes**: `--password='Siyean@12345$$'`.
 
+### Website sign-up / login / password reset (Laravel MySQL `users`)
+
+Customer-facing auth is separate from POS:
+
+- `/auth/register`, `/auth/login`, `/auth/forgot-password`, `/auth/reset-password/{token}`, `/auth/account`
+
+Set **`MAIL_*`** in Laravel `.env` so reset emails send. Staff tools stay at **`/login`** (SQLite).
+
 ---
 
 ## Step 3 — Wire `public_html` to Laravel's `public/`
