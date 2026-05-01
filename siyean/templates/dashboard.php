@@ -1,67 +1,15 @@
 <?php
 /**
- * @var array $summary
- * @var array $inventory
+ * Dashboard view state is prepared in App\Http\DashboardViewModel (demo vs live).
+ *
+ * @var bool $showDemoRibbon
+ * @var array $displaySummary
+ * @var array<int, array<string, mixed>> $displayInventory
+ * @var \DateTimeImmutable $demoPeriodStart
+ * @var \DateTimeImmutable $demoPeriodEnd
+ * @var string $demoPeriodStartIso
+ * @var string $demoPeriodEndIso
  */
-
-$hasLiveData =
-    !empty($inventory)
-    || (int) ($summary['count'] ?? 0) > 0
-    || (float) ($summary['revenue'] ?? 0) > 0.0;
-
-$today = new \DateTimeImmutable('today');
-$demoPeriodEnd = $today;
-$demoPeriodStart = $today->modify('-29 days');
-$demoPeriodEndIso = $demoPeriodEnd->format('Y-m-d');
-$demoPeriodStartIso = $demoPeriodStart->format('Y-m-d');
-
-$demoSummary = [
-    'count' => 12,
-    'units' => 18,
-    'revenue' => 28490.0,
-    'avg_ticket' => 2374.17,
-];
-$demoInventory = [
-    [
-        'sku' => 'MBP-14-M4-512',
-        'model' => 'MacBook Pro 14" M4',
-        'storage_capacity' => 512,
-        'quantity_on_hand' => 4,
-        'demo_updated' => $today->modify('-1 day')->format('M j, Y'),
-    ],
-    [
-        'sku' => 'MBA-13-M3-256',
-        'model' => 'MacBook Air 13" M3',
-        'storage_capacity' => 256,
-        'quantity_on_hand' => 6,
-        'demo_updated' => $today->modify('-3 days')->format('M j, Y'),
-    ],
-    [
-        'sku' => 'iM-24-M4-512',
-        'model' => 'iMac 24" M4',
-        'storage_capacity' => 512,
-        'quantity_on_hand' => 2,
-        'demo_updated' => $today->modify('-5 days')->format('M j, Y'),
-    ],
-    [
-        'sku' => 'ACC-USBC-2M',
-        'model' => 'USB-C cable 2m',
-        'storage_capacity' => 0,
-        'quantity_on_hand' => 24,
-        'demo_updated' => $today->modify('-2 days')->format('M j, Y'),
-    ],
-    [
-        'sku' => 'PC-ULTRA-1TB',
-        'model' => 'PC Workstation Ultra',
-        'storage_capacity' => 1024,
-        'quantity_on_hand' => 1,
-        'demo_updated' => $today->modify('-7 days')->format('M j, Y'),
-    ],
-];
-
-$showDemoRibbon = !$hasLiveData;
-$displaySummary = $showDemoRibbon ? $demoSummary : $summary;
-$displayInventory = $showDemoRibbon ? $demoInventory : $inventory;
 ?>
 <div class="dashboard">
   <?php if ($showDemoRibbon): ?>

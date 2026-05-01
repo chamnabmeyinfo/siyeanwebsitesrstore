@@ -13,12 +13,13 @@
 - **Storage:** SQLite file (`storage/pos.db`) accessed through PDO.
 - **Structure:**
   - `src/Database.php`: PDO connection + migrations.
-  - `src/InventoryRepository.php`: CRUD + stock adjustments.
+  - `src/InventoryRepository.php`: CRUD, stock adjustments, storefront lookups.
   - `src/SaleService.php`: customer upsert, stock enforcement, sale persistence.
   - `src/ReportService.php`: revenue/unit aggregations and inventory snapshot.
   - `src/UserRepository.php`: authentication + role lookups.
-  - `public/index.php`: tiny front controller / router.
-  - `templates/admin/*.php`: admin console layouts/views.
+  - `public/index.php`: bootstrap only — wires services and delegates to `HttpKernel`.
+  - `src/Http/`: HTTP concerns — routing (`HttpKernel`), sessions/auth (`AuthGate`), responses (`ViewRenderer`), dashboard view-model (`DashboardViewModel`), form mapping (`Http/Form/*`).
+  - `templates/*.php`: PHP templates (presentation); business rules stay out of views.
   - `templates/layout_store.php`: public showroom shell.
 
 ### Key data model

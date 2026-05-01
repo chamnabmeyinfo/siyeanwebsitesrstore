@@ -96,6 +96,34 @@ final class InventoryRepository
         return $row ?: null;
     }
 
+    /** Full row for a visible online catalog product by URL slug. */
+    public function findVisibleOnlineBySlug(string $slug): ?array
+    {
+        $stmt = $this->db->prepare(
+            'SELECT * FROM inventory WHERE slug = :slug AND visible_online = 1'
+        );
+        $stmt->execute([':slug' => $slug]);
+        $row = $stmt->fetch();
+
+        return $row ?: null;
+    }
+
+    /**
+     * Fields for validating bookings, redirects, and staff notifications.
+     *
+     * @return array{id:int, sku:string, model:string, slug:?string, quantity_on_hand:int}|null
+     */
+    public function findVisibleOnlineSummaryById(int $id): ?array
+    {
+        $stmt = $this->db->prepare(
+            'SELECT id, sku, slug, model, quantity_on_hand FROM inventory WHERE id = :id AND visible_online = 1'
+        );
+        $stmt->execute([':id' => $id]);
+        $row = $stmt->fetch();
+
+        return $row ?: null;
+    }
+
     private function encodeGallery(array|string|null $input): ?string
     {
         if ($input === null) {

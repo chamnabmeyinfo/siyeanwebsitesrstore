@@ -1,6 +1,6 @@
 <?php
 /** @var array|null $flash */
-$navPath = parse_url($_SERVER['REQUEST_URI'] ?? '/', PHP_URL_PATH) ?: '/';
+$navPath = $request_path ?? (parse_url($_SERVER['REQUEST_URI'] ?? '/', PHP_URL_PATH) ?: '/');
 
 function nav_link_active(string $href, string $current): bool
 {
