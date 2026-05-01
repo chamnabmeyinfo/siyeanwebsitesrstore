@@ -7,6 +7,9 @@ function nav_link_active(string $href, string $current): bool
     if ($href === '/dashboard') {
         return $current === '/dashboard';
     }
+    if ($href === '/settings/store-menu') {
+        return str_starts_with($current, '/settings/store-menu');
+    }
     if ($href === '/') {
         return $current === '/' || $current === '/store';
     }
@@ -1266,6 +1269,9 @@ function user_initials(string $name): string
               <a href="/sales"<?= nav_attrs('/sales', $navPath) ?>>Sales</a>
               <a href="/bookings"<?= nav_attrs('/bookings', $navPath) ?>>Bookings</a>
               <a href="/"<?= nav_attrs('/', $navPath) ?>>Shop</a>
+              <?php if (!empty($currentUser) && in_array($currentUser['role'], ['admin', 'ecommerce'], true)): ?>
+                <a href="/settings/store-menu"<?= nav_attrs('/settings/store-menu', $navPath) ?>>Shop menu</a>
+              <?php endif; ?>
             </div>
           </div>
         </nav>

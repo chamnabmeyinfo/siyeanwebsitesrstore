@@ -9,6 +9,7 @@ use App\InventoryRepository;
 use App\NotificationService;
 use App\ReportService;
 use App\SaleService;
+use App\StoreMenuRepository;
 use App\UserRepository;
 
 /**
@@ -23,6 +24,7 @@ final class WebContainer
         public readonly UserRepository $users,
         public readonly BookingRepository $bookings,
         public readonly NotificationService $notifications,
+        public readonly StoreMenuRepository $storeMenu,
     ) {
     }
 }

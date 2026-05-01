@@ -1,16 +1,43 @@
 <?php
 $navPath = $request_path ?? (parse_url($_SERVER['REQUEST_URI'] ?? '/', PHP_URL_PATH) ?: '/');
 
-function store_nav_attrs(string $kind, string $current): string
+/** Highlight shop nav items based on URL (external links are never marked current). */
+function store_menu_path_matches(string $href, string $currentPath): bool
 {
-    $active = match ($kind) {
-        'home' => in_array($current, ['/', '/store'], true),
-        'devices' => str_starts_with($current, '/store/product'),
-        'login' => str_starts_with($current, '/login'),
-        default => false,
-    };
+    $href = trim($href);
+    if ($href === '') {
+        return false;
+    }
+    if (preg_match('#^(https?://|mailto:|tel:)#i', $href) === 1) {
+        return false;
+    }
 
-    return $active ? ' class="active" aria-current="page"' : '';
+    $path = parse_url($href, PHP_URL_PATH);
+    if ($path === null || $path === '') {
+        $path = '/';
+    }
+    $fragment = parse_url($href, PHP_URL_FRAGMENT);
+
+    if (($fragment ?? '') !== '') {
+        if ($path === '/') {
+            return in_array($currentPath, ['/', '/store'], true)
+                || str_starts_with($currentPath, '/store/product');
+        }
+    }
+
+    if ($path === '/') {
+        return in_array($currentPath, ['/', '/store'], true);
+    }
+    if ($path === '/login') {
+        return str_starts_with($currentPath, '/login');
+    }
+
+    return $currentPath === $path || str_starts_with($currentPath, rtrim($path, '/') . '/');
+}
+
+function store_menu_link_attrs(string $href, string $currentPath): string
+{
+    return store_menu_path_matches($href, $currentPath) ? ' class="active" aria-current="page"' : '';
 }
 ?>
 <!DOCTYPE html>
@@ -1071,9 +1098,9 @@ function store_nav_attrs(string $kind, string $current): string
             Menu
           </button>
           <div class="nav-links" id="store-nav-menu">
-            <a href="/"<?= store_nav_attrs('home', $navPath) ?>>Home</a>
-            <a href="/#inventory-list"<?= store_nav_attrs('devices', $navPath) ?>>Devices</a>
-            <a href="/login"<?= store_nav_attrs('login', $navPath) ?>>Sign in</a>
+            <?php foreach (($store_menu_items ?? []) as $item): ?>
+              <a href="<?= htmlspecialchars((string) $item['href']) ?>"<?= store_menu_link_attrs((string) $item['href'], $navPath) ?>><?= htmlspecialchars((string) $item['label']) ?></a>
+            <?php endforeach; ?>
           </div>
         </nav>
       </div>

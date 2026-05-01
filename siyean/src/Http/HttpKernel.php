@@ -142,6 +142,23 @@ final class HttpKernel
                 $this->handleBookingStatus();
                 break;
 
+            case $method === 'GET' && $requestPath === '/settings/store-menu':
+                $this->auth->requireRole($this->view, ['admin', 'ecommerce']);
+                $this->view->render('store_menu.php', ['items' => $this->app->storeMenu->allForAdmin()]);
+                break;
+
+            case $method === 'POST' && $requestPath === '/settings/store-menu/create':
+                $this->handleStoreMenuCreate();
+                break;
+
+            case $method === 'POST' && $requestPath === '/settings/store-menu/update':
+                $this->handleStoreMenuUpdate();
+                break;
+
+            case $method === 'POST' && $requestPath === '/settings/store-menu/delete':
+                $this->handleStoreMenuDelete();
+                break;
+
             case $method === 'GET' && $requestPath === '/store':
                 $this->renderPublicStorefront();
                 break;
@@ -156,7 +173,9 @@ final class HttpKernel
 
             default:
                 http_response_code(404);
-                $this->view->render('404.php', ['layout' => 'store']);
+                $this->view->render('404.php', array_merge($this->storefrontLayoutData(), [
+                    'layout' => 'store',
+                ]));
                 break;
         }
     }
@@ -193,10 +212,82 @@ final class HttpKernel
 
     private function renderPublicStorefront(): void
     {
-        $this->view->render('store.php', [
+        $this->view->render('store.php', array_merge($this->storefrontLayoutData(), [
             'items' => $this->app->inventory->all(true),
             'layout' => 'store',
-        ]);
+        ]));
+    }
+
+    /**
+     * @return array{store_menu_items: list<array<string, mixed>>}
+     */
+    private function storefrontLayoutData(): array
+    {
+        return [
+            'store_menu_items' => $this->app->storeMenu->visibleOrdered(),
+        ];
+    }
+
+    private function handleStoreMenuCreate(): void
+    {
+        $this->auth->requireRole($this->view, ['admin', 'ecommerce']);
+        $label = trim($_POST['label'] ?? '');
+        $href = trim($_POST['href'] ?? '');
+        $sortOrder = (int) ($_POST['sort_order'] ?? 0);
+        $active = isset($_POST['is_active']);
+
+        try {
+            $this->app->storeMenu->create($label, $href, $sortOrder, $active);
+            $this->view->flash('success', 'Menu link added.');
+        } catch (Throwable $e) {
+            $this->view->flash('error', $e->getMessage());
+        }
+
+        $this->view->redirect('/settings/store-menu');
+    }
+
+    private function handleStoreMenuUpdate(): void
+    {
+        $this->auth->requireRole($this->view, ['admin', 'ecommerce']);
+        $id = (int) ($_POST['menu_id'] ?? 0);
+        $label = trim($_POST['label'] ?? '');
+        $href = trim($_POST['href'] ?? '');
+        $sortOrder = (int) ($_POST['sort_order'] ?? 0);
+        $active = isset($_POST['is_active']);
+
+        if ($id <= 0) {
+            $this->view->flash('error', 'Invalid menu item.');
+            $this->view->redirect('/settings/store-menu');
+        }
+
+        try {
+            $this->app->storeMenu->update($id, $label, $href, $sortOrder, $active);
+            $this->view->flash('success', 'Menu link updated.');
+        } catch (Throwable $e) {
+            $this->view->flash('error', $e->getMessage());
+        }
+
+        $this->view->redirect('/settings/store-menu');
+    }
+
+    private function handleStoreMenuDelete(): void
+    {
+        $this->auth->requireRole($this->view, ['admin', 'ecommerce']);
+        $id = (int) ($_POST['menu_id'] ?? 0);
+
+        if ($id <= 0) {
+            $this->view->flash('error', 'Invalid menu item.');
+            $this->view->redirect('/settings/store-menu');
+        }
+
+        try {
+            $this->app->storeMenu->delete($id);
+            $this->view->flash('success', 'Menu link removed.');
+        } catch (Throwable $e) {
+            $this->view->flash('error', $e->getMessage());
+        }
+
+        $this->view->redirect('/settings/store-menu');
     }
 
     private function handleInventoryCreate(): void
@@ -435,11 +526,16 @@ final class HttpKernel
         $product = $this->app->inventory->findVisibleOnlineBySlug($slug);
         if (!$product) {
             http_response_code(404);
-            $this->view->render('404.php', ['layout' => 'store']);
+            $this->view->render('404.php', array_merge($this->storefrontLayoutData(), [
+                'layout' => 'store',
+            ]));
 
             return;
         }
-        $this->view->render('store_product.php', ['product' => $product, 'layout' => 'store']);
+        $this->view->render('store_product.php', array_merge($this->storefrontLayoutData(), [
+            'product' => $product,
+            'layout' => 'store',
+        ]));
     }
 
     private function handleStoreBooking(): void

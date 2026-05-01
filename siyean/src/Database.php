@@ -93,9 +93,19 @@ final class Database
             role TEXT NOT NULL DEFAULT 'admin',
             created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP
         );
+
+        CREATE TABLE IF NOT EXISTS store_menu_items (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            label TEXT NOT NULL,
+            href TEXT NOT NULL,
+            sort_order INTEGER NOT NULL DEFAULT 0,
+            is_active INTEGER NOT NULL DEFAULT 1,
+            created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP
+        );
         SQL;
 
         self::connection()->exec($sql);
+        self::seedStoreMenuDefaults();
         self::ensureColumn('inventory', 'hero_image', 'TEXT');
         self::ensureColumn('inventory', 'gallery_images', 'TEXT');
         self::ensureColumn('inventory', 'slug', 'TEXT');
@@ -116,6 +126,30 @@ final class Database
             }
         }
         $pdo->exec("ALTER TABLE {$table} ADD COLUMN {$column} {$definition}");
+    }
+
+    private static function seedStoreMenuDefaults(): void
+    {
+        $pdo = self::connection();
+        $count = (int) $pdo->query('SELECT COUNT(*) FROM store_menu_items')->fetchColumn();
+        if ($count > 0) {
+            return;
+        }
+        $defaults = [
+            ['Home', '/', 0],
+            ['Devices', '/#inventory-list', 10],
+            ['Sign in', '/login', 20],
+        ];
+        $stmt = $pdo->prepare(
+            'INSERT INTO store_menu_items (label, href, sort_order, is_active) VALUES (:label, :href, :sort_order, 1)'
+        );
+        foreach ($defaults as [$label, $href, $order]) {
+            $stmt->execute([
+                ':label' => $label,
+                ':href' => $href,
+                ':sort_order' => $order,
+            ]);
+        }
     }
 
     private static function backfillInventorySlugs(): void

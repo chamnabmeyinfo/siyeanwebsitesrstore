@@ -12,6 +12,7 @@ use App\InventoryRepository;
 use App\NotificationService;
 use App\ReportService;
 use App\SaleService;
+use App\StoreMenuRepository;
 use App\UserRepository;
 
 require __DIR__ . '/../vendor/autoload.php';
@@ -26,6 +27,7 @@ $sales = new SaleService($db, $inventory);
 $report = new ReportService($db, $sales);
 $users = new UserRepository($db);
 $bookingsRepo = new BookingRepository($db);
+$storeMenu = new StoreMenuRepository($db);
 
 $defaultConfig = require __DIR__ . '/../config/app.example.php';
 $customConfigPath = __DIR__ . '/../config/app.php';
@@ -36,7 +38,7 @@ if (file_exists($customConfigPath)) {
 }
 $notifications = new NotificationService($appConfig['notifications'] ?? []);
 
-$container = new WebContainer($inventory, $sales, $report, $users, $bookingsRepo, $notifications);
+$container = new WebContainer($inventory, $sales, $report, $users, $bookingsRepo, $notifications, $storeMenu);
 $auth = new AuthGate($users);
 $view = new ViewRenderer($auth);
 $kernel = new HttpKernel($container, $auth, $view);
