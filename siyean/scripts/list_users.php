@@ -10,7 +10,9 @@ require __DIR__ . '/../vendor/autoload.php';
 $users = (new UserRepository(Database::connection()))->listUsers();
 
 if ($users === []) {
-    echo "No users found." . PHP_EOL;
+    fwrite(STDERR, "No users in the SQLite database (siyean/storage/pos.db).\n");
+    fwrite(STDERR, "Create the first account — do not use reset_password until a user exists:\n");
+    fwrite(STDERR, '  php scripts/create_user.php --name="Owner" --email="you@example.com" --password="..." --role=admin' . PHP_EOL);
     exit(0);
 }
 

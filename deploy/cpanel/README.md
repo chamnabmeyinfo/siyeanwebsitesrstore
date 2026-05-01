@@ -149,6 +149,12 @@ php scripts/reset_password.php \
 
 `reset_password.php` updates `password_hash` only; it does not create users.
 
+**If `list_users.php` shows no users:** the `users` table is empty — run
+`create_user.php` first. **Reset** only works for accounts that already exist.
+
+**Shell tip:** In Bash, double quotes expand `$` (e.g. `$$` becomes a process
+ID). Put passwords in **single quotes**: `--password='Siyean@12345$$'`.
+
 ---
 
 ## Step 3 — Wire `public_html` to Laravel's `public/`

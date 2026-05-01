@@ -21,6 +21,9 @@ $repo = new UserRepository(Database::connection());
 
 if (!$repo->updatePassword($email, $password)) {
     fwrite(STDERR, "No user found with email {$email}.\n");
+    if ($repo->count() === 0) {
+        fwrite(STDERR, "There are no users yet — run scripts/create_user.php instead.\n");
+    }
     exit(1);
 }
 
