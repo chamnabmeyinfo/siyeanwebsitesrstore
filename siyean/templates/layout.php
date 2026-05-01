@@ -41,6 +41,17 @@ function user_initials(string $name): string
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <script>
+      (function () {
+        var h = document.documentElement;
+        if (h.getAttribute('data-theme') === 'system') {
+          h.setAttribute(
+            'data-system-pref',
+            window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light'
+          );
+        }
+      })();
+    </script>
     <title>Mac POS</title>
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
@@ -760,14 +771,26 @@ function user_initials(string $name): string
         height: 13px;
         flex-shrink: 0;
       }
-      .theme-btn.active {
-        border-color: rgba(59, 130, 246, 0.7);
-        color: #e0f2ff;
-        background: rgba(59, 130, 246, 0.15);
+      /* Selected segment follows html[data-theme] — matches resolved colors via CSS vars */
+      :root[data-theme="light"] .theme-toggle .theme-btn[data-theme="light"],
+      :root[data-theme="dark"] .theme-toggle .theme-btn[data-theme="dark"],
+      :root[data-theme="system"] .theme-toggle .theme-btn[data-theme="system"] {
+        border-color: rgba(59, 130, 246, 0.55);
+        background: var(--chip-bg);
+        color: var(--chip-color);
+        box-shadow:
+          0 0 0 1px rgba(59, 130, 246, 0.2),
+          0 1px 3px rgba(15, 23, 42, 0.12);
       }
-      :root[data-theme="light"] .theme-btn.active {
-        color: #1d4ed8;
-        background: rgba(59, 130, 246, 0.08);
+      :root[data-theme="dark"] .theme-toggle .theme-btn[data-theme="dark"],
+      :root[data-theme="system"][data-system-pref="dark"] .theme-toggle .theme-btn[data-theme="system"] {
+        box-shadow:
+          0 0 0 1px rgba(96, 165, 250, 0.35),
+          0 2px 8px rgba(37, 99, 235, 0.25);
+      }
+      .theme-toggle .theme-btn:focus-visible {
+        outline: 2px solid rgba(59, 130, 246, 0.75);
+        outline-offset: 2px;
       }
       .user-chip {
         display: inline-flex;
@@ -860,13 +883,13 @@ function user_initials(string $name): string
         </nav>
         <div class="user-chip header-actions">
           <div class="theme-toggle" role="group" aria-label="Color theme">
-            <button type="button" class="theme-btn" data-theme="light" title="Light" aria-label="Light theme">
+            <button type="button" class="theme-btn" data-theme="light" title="Light" aria-label="Light theme" aria-pressed="false">
               <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><circle cx="12" cy="12" r="4"/><path stroke-linecap="round" d="M12 2v2m0 14v2M4.93 4.93l1.41 1.41m11.32 11.32 1.41 1.41M2 12h2m14 0h2M4.93 19.07l1.41-1.41M17.66 6.34l1.41-1.41"/></svg>
             </button>
-            <button type="button" class="theme-btn" data-theme="dark" title="Dark" aria-label="Dark theme">
+            <button type="button" class="theme-btn" data-theme="dark" title="Dark" aria-label="Dark theme" aria-pressed="false">
               <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" d="M21 12.79A9 9 0 1111.21 3 7 7 0 0021 12.79z"/></svg>
             </button>
-            <button type="button" class="theme-btn active" data-theme="system" title="System (match device)" aria-label="System theme">
+            <button type="button" class="theme-btn" data-theme="system" title="System (match device)" aria-label="System theme" aria-pressed="false">
               <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><rect x="2" y="3" width="20" height="14" rx="2" ry="2"/><path stroke-linecap="round" d="M8 21h8m-4-4v4"/></svg>
             </button>
           </div>
@@ -897,18 +920,26 @@ function user_initials(string $name): string
     <script>
       (function () {
         const root = document.documentElement;
-        const stored = localStorage.getItem('mac-pos-theme') || 'system';
         const buttons = document.querySelectorAll('.theme-btn');
+        const raw = localStorage.getItem('mac-pos-theme');
+        const stored = raw === 'light' || raw === 'dark' || raw === 'system' ? raw : 'system';
 
         function applyTheme(mode) {
+          if (mode !== 'light' && mode !== 'dark' && mode !== 'system') {
+            mode = 'system';
+          }
           root.setAttribute('data-theme', mode);
           if (mode === 'system') {
-            const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
-            root.dataset.systemPref = prefersDark ? 'dark' : 'light';
+            root.dataset.systemPref = window.matchMedia('(prefers-color-scheme: dark)').matches
+              ? 'dark'
+              : 'light';
           } else {
             delete root.dataset.systemPref;
           }
-          buttons.forEach((btn) => btn.classList.toggle('active', btn.dataset.theme === mode));
+          buttons.forEach((btn) => {
+            const on = btn.dataset.theme === mode;
+            btn.setAttribute('aria-pressed', on ? 'true' : 'false');
+          });
         }
 
         applyTheme(stored);
@@ -916,6 +947,9 @@ function user_initials(string $name): string
         buttons.forEach((btn) => {
           btn.addEventListener('click', () => {
             const mode = btn.dataset.theme;
+            if (mode !== 'light' && mode !== 'dark' && mode !== 'system') {
+              return;
+            }
             localStorage.setItem('mac-pos-theme', mode);
             applyTheme(mode);
           });
