@@ -199,38 +199,116 @@ function user_initials(string $name): string
       .brand {
         display: flex;
         align-items: center;
-        gap: 1rem;
+        gap: 0.85rem 1rem;
         flex-shrink: 0;
+        min-width: 0;
+      }
+      .brand-mark {
+        flex-shrink: 0;
+        text-decoration: none;
+        color: inherit;
+        border-radius: 1.05rem;
+        padding: 0.1rem;
+        background: linear-gradient(
+          135deg,
+          rgba(255, 255, 255, 0.12) 0%,
+          rgba(59, 130, 246, 0.15) 50%,
+          rgba(15, 23, 42, 0.4) 100%
+        );
+        box-shadow:
+          0 1px 0 rgba(255, 255, 255, 0.1) inset,
+          0 6px 20px rgba(2, 6, 23, 0.45);
+        transition: transform 0.2s ease, box-shadow 0.2s ease;
+      }
+      .brand-mark:hover {
+        transform: translateY(-1px);
+        box-shadow:
+          0 1px 0 rgba(255, 255, 255, 0.12) inset,
+          0 10px 28px rgba(37, 99, 235, 0.3);
+      }
+      .brand-mark:focus-visible {
+        outline: 2px solid rgba(59, 130, 246, 0.8);
+        outline-offset: 3px;
+      }
+      :root[data-theme="light"] .brand-mark {
+        background: linear-gradient(135deg, #ffffff 0%, #f1f5f9 100%);
+        box-shadow:
+          0 1px 0 rgba(255, 255, 255, 1) inset,
+          0 4px 16px rgba(15, 23, 42, 0.1),
+          0 0 0 1px rgba(15, 23, 42, 0.06);
+      }
+      :root[data-theme="light"] .brand-mark:hover {
+        box-shadow:
+          0 1px 0 rgba(255, 255, 255, 1) inset,
+          0 8px 24px rgba(37, 99, 235, 0.12),
+          0 0 0 1px rgba(37, 99, 235, 0.12);
       }
       .brand-logo {
-        width: 56px;
-        height: 56px;
-        border-radius: 50%;
+        width: 50px;
+        height: 50px;
+        border-radius: 0.9rem;
         overflow: hidden;
-        background: radial-gradient(circle at 30% 30%, #ffffff, #cbd5f5);
-        border: 1px solid rgba(255, 255, 255, 0.4);
+        background: linear-gradient(160deg, rgba(255, 255, 255, 0.95) 0%, rgba(226, 232, 240, 0.9) 100%);
         display: flex;
         align-items: center;
         justify-content: center;
-        box-shadow: inset 0 0 8px rgba(255, 255, 255, 0.4);
+        box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.7);
+      }
+      :root[data-theme="light"] .brand-logo {
+        background: linear-gradient(160deg, #ffffff 0%, #f8fafc 100%);
       }
       .brand-logo img {
-        width: 46px;
-        height: 46px;
+        width: 40px;
+        height: 40px;
         object-fit: contain;
       }
-      .brand h1 {
-        margin: 0;
-        font-size: clamp(1.35rem, 3vw, 1.75rem);
+      .brand-text {
+        display: flex;
+        flex-direction: column;
+        gap: 0.12rem;
+        min-width: 0;
+      }
+      .brand-kicker {
+        font-size: 0.65rem;
         font-weight: 600;
-        letter-spacing: -0.03em;
-        line-height: 1.15;
+        letter-spacing: 0.14em;
+        text-transform: uppercase;
+        color: var(--muted);
+        line-height: 1.2;
+      }
+      .brand-name {
+        margin: 0;
+        font-size: clamp(1.2rem, 2.4vw, 1.5rem);
+        font-weight: 700;
+        letter-spacing: -0.04em;
+        line-height: 1.1;
+        color: var(--text-color);
+      }
+      @supports (background-clip: text) or (-webkit-background-clip: text) {
+        :root[data-theme="dark"] .brand-name,
+        :root[data-theme="system"][data-system-pref="dark"] .brand-name,
+        :root:not([data-theme]) .brand-name {
+          background: linear-gradient(100deg, #f8fafc 0%, #e2e8f0 40%, #7dd3fc 100%);
+          -webkit-background-clip: text;
+          background-clip: text;
+          color: transparent;
+        }
+        :root[data-theme="light"] .brand-name,
+        :root[data-theme="system"][data-system-pref="light"] .brand-name {
+          background: linear-gradient(100deg, #0f172a 0%, #1e3a5f 45%, #2563eb 100%);
+          -webkit-background-clip: text;
+          background-clip: text;
+          color: transparent;
+        }
       }
       .brand-tagline {
-        margin: 0.2rem 0 0;
+        margin: 0.1rem 0 0;
         color: var(--muted);
-        font-size: 0.8125rem;
-        letter-spacing: 0.02em;
+        font-size: 0.75rem;
+        font-weight: 500;
+        letter-spacing: 0.01em;
+        line-height: 1.35;
+        max-width: 16rem;
       }
       .brand-badge {
         background: rgba(56, 189, 248, 0.15);
@@ -861,12 +939,15 @@ function user_initials(string $name): string
     <header>
       <div class="main-header">
         <div class="brand">
-          <div class="brand-logo">
-            <img src="/assets/sr-mac-logo.svg" alt="SR Mac Shop logo" />
-          </div>
-          <div>
-            <h1>SR MAC SHOP</h1>
-            <p class="brand-tagline">Premier Mac Studio & Ops</p>
+          <a class="brand-mark" href="/" title="SR Mac Shop — Dashboard" aria-label="SR Mac Shop, go to dashboard">
+            <div class="brand-logo">
+              <img src="/assets/sr-mac-logo.svg" alt="" width="40" height="40" />
+            </div>
+          </a>
+          <div class="brand-text">
+            <span class="brand-kicker">Mac specialty retail</span>
+            <h1 class="brand-name">SR Mac Shop</h1>
+            <p class="brand-tagline">Premier Mac studio, showroom &amp; operations</p>
           </div>
         </div>
         <nav aria-label="Main navigation">
