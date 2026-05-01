@@ -2,4 +2,4 @@
 
 declare(strict_types=1);
 
-require dirname(__DIR__) . '/../siyean/scripts/seed_demo_data.php';
+require dirname(__DIR__) . '/siyean/scripts/seed_demo_data.php';

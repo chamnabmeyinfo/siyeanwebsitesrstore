@@ -8,10 +8,10 @@ composer.lock
 
 # Database
 *.db
-siyean/storage/pos.db
+siyean-laravel/siyean/storage/pos.db
 
 # Local configuration (legacy app)
-siyean/config/app.php
+siyean-laravel/siyean/config/app.php
 
 # IDE
 .idea/

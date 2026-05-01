@@ -7,10 +7,10 @@ declare(strict_types=1);
 | PHPUnit bootstrap (must load before Composer autoload)
 |--------------------------------------------------------------------------
 |
-| This repo contains two Composer projects (`../siyean` and this folder).
+| This repo contains two Composer projects (`./siyean` and this folder).
 | Laravel's Application::inferBasePath() picks the first registered Composer
 | loader, which can resolve to the wrong directory and break tests with:
-|   Failed opening required '.../siyean/bootstrap/app.php'
+|   Failed opening required '.../siyean-laravel/siyean/bootstrap/app.php'
 |
 | Cached routes from production (`route:cache`) also omit /auth/* and cause
 | HTTP tests to hit the legacy bridge (302 to /login).

@@ -4,13 +4,14 @@ Repo layout assumed (matches cPanel *Git Version Control* default):
 
 ```
 /home/<user>/repositories/siyeanwebsitesrstore/
-    siyean-laravel/         ← primary project: Laravel 12, Artisan, public/, scripts/
-    siyean/                 ← legacy POS / storefront (PHP + SQLite); loaded by the bridge
+    siyean-laravel/         ← single project root: Laravel + embedded legacy app
+    └── siyean/             ← legacy POS / storefront (PHP + SQLite); loaded by the bridge
     deploy/cpanel/          ← these deployment files
 ```
 
 **Treat `siyean-laravel/` as your main `cd` target** (Artisan, `php scripts/…`,
-deployment). `siyean/` holds the bundled legacy source and `storage/pos.db`.
+deployment). `siyean-laravel/siyean/` holds the bundled legacy source and
+`storage/pos.db`.
 
 The goal: serve `srmacshop.com` from this repo via `~/public_html`.
 
@@ -21,7 +22,7 @@ Browser  →  Cloudflare  →  LiteSpeed  →  ~/public_html/  →  siyean-larav
                                                               ↓
                                                           LegacyBridgeController
                                                               ↓
-                                                      siyean/public/index.php  (the actual app)
+                                           siyean-laravel/siyean/public/index.php  (the actual app)
 ```
 
 ---
@@ -35,7 +36,7 @@ Browser  →  Cloudflare  →  LiteSpeed  →  ~/public_html/  →  siyean-larav
 2. **MySQL database for Laravel** — *MySQL Databases* → create
    `<user>_srmacshop` DB + matching user with **ALL PRIVILEGES**. (The
    legacy app does NOT need MySQL — it uses SQLite at
-   `siyean/storage/pos.db`.)
+   `siyean-laravel/siyean/storage/pos.db`.)
 3. **HTTPS** — *SSL/TLS Status* → run **AutoSSL** for `srmacshop.com` (after
    Step 3 below). If using Cloudflare, set SSL/TLS mode = **Full (strict)**.
 
@@ -94,12 +95,12 @@ config:clear && php artisan config:cache`.
 
 ---
 
-## Step 2 — Set up the legacy SR Mac Shop app (`siyean/`)
+## Step 2 — Set up the legacy SR Mac Shop app (`siyean-laravel/siyean/`)
 
 The live storefront and staff UI run from this folder via the Laravel bridge.
 
 ```bash
-cd ~/repositories/siyeanwebsitesrstore/siyean
+cd ~/repositories/siyeanwebsitesrstore/siyean-laravel/siyean
 
 composer install --no-dev --optimize-autoloader
 
@@ -118,7 +119,7 @@ php scripts/seed_inventory.php
 php scripts/seed_demo_data.php
 ```
 
-After this, `siyean/storage/pos.db` is the source of truth for **products,
+After this, `siyean-laravel/siyean/storage/pos.db` is the source of truth for **products,
 sales, customers, bookings, users, store-menu**.
 
 > Roles available: `admin` (full access incl. delete/import), `clerk`
@@ -201,9 +202,9 @@ ln -s ~/repositories/siyeanwebsitesrstore/siyean-laravel/storage/app/public ~/pu
 cp ~/repositories/siyeanwebsitesrstore/siyean-laravel/public/favicon.ico ~/public_html/
 cp ~/repositories/siyeanwebsitesrstore/siyean-laravel/public/robots.txt  ~/public_html/
 
-# The legacy app keeps its branding under siyean/public/assets — make those
+# The legacy app keeps its branding under siyean-laravel/siyean/public/assets — make those
 # reachable directly so <img src="/assets/sr-mac-logo.svg"> just works.
-ln -s ~/repositories/siyeanwebsitesrstore/siyean/public/assets ~/public_html/assets
+ln -s ~/repositories/siyeanwebsitesrstore/siyean-laravel/siyean/public/assets ~/public_html/assets
 
 ls -la ~/public_html
 ```
@@ -235,7 +236,7 @@ git pull
 
 # Reinstall vendors only if composer.json/.lock changed (project root first)
 [ -d siyean-laravel/vendor ] || (cd siyean-laravel && composer install --no-dev --optimize-autoloader)
-[ -d siyean/vendor ]         || (cd siyean         && composer install --no-dev --optimize-autoloader)
+[ -d siyean-laravel/siyean/vendor ] || (cd siyean-laravel/siyean && composer install --no-dev --optimize-autoloader)
 
 cd siyean-laravel
 php artisan migrate --force
@@ -245,7 +246,7 @@ php artisan view:cache
 ```
 
 You don't need to touch `~/public_html` again — it forwards to whatever's in
-`siyean-laravel/public/`, which forwards to `siyean/`.
+`siyean-laravel/public/`, which forwards to `siyean-laravel/siyean/`.
 
 ---
 
@@ -253,14 +254,14 @@ You don't need to touch `~/public_html` again — it forwards to whatever's in
 
 | Symptom | Likely cause | Fix |
 |---|---|---|
-| `HTTP 500 / Legacy application entrypoint not found.` | `siyean/` folder missing or wrong path | `ls -la ~/repositories/siyeanwebsitesrstore/siyean/public/index.php` should exist |
-| `HTTP 500 / Class "App\Database" not found` | `siyean/vendor/` not installed | `cd siyean && composer install --no-dev --optimize-autoloader` |
-| `HTTP 500 / unable to open database file` | `siyean/storage/pos.db` missing or not writable | `mkdir -p siyean/storage && touch siyean/storage/pos.db && chmod 775 siyean/storage && chmod 664 siyean/storage/pos.db` |
-| Storefront loads but no images / `/assets/sr-mac-logo.svg` 404 | Approach B without the `assets` symlink | `ln -s ~/repositories/siyeanwebsitesrstore/siyean/public/assets ~/public_html/assets` |
+| `HTTP 500 / Legacy application entrypoint not found.` | `siyean-laravel/siyean/` missing or wrong path | `ls -la ~/repositories/siyeanwebsitesrstore/siyean-laravel/siyean/public/index.php` should exist |
+| `HTTP 500 / Class "App\Database" not found` | `siyean-laravel/siyean/vendor/` not installed | `cd ~/repositories/siyeanwebsitesrstore/siyean-laravel/siyean && composer install --no-dev --optimize-autoloader` |
+| `HTTP 500 / unable to open database file` | `siyean-laravel/siyean/storage/pos.db` missing or not writable | `mkdir -p ~/repositories/siyeanwebsitesrstore/siyean-laravel/siyean/storage && touch ~/repositories/siyeanwebsitesrstore/siyean-laravel/siyean/storage/pos.db && chmod 775 ~/repositories/siyeanwebsitesrstore/siyean-laravel/siyean/storage && chmod 664 ~/repositories/siyeanwebsitesrstore/siyean-laravel/siyean/storage/pos.db` |
+| Storefront loads but no images / `/assets/sr-mac-logo.svg` 404 | Approach B without the `assets` symlink | `ln -s ~/repositories/siyeanwebsitesrstore/siyean-laravel/siyean/public/assets ~/public_html/assets` |
 | Login form just reloads, no error | Stale Laravel route cache | `cd siyean-laravel && php artisan route:clear && php artisan config:clear && php artisan route:cache && php artisan config:cache` |
 | Plain LiteSpeed 404 page (not Laravel-styled) | `~/public_html` not wired (Step 3 not done or was reverted) | Re-run Step 3 |
 | Stale page after deploy | Cloudflare cache | Cloudflare → Caching → Purge Everything |
-| `Could not open input file: scripts/list_users.php` (or other `scripts/*.php`) | Server clone is older than the commits that add `siyean-laravel/scripts/` | `cd ~/repositories/siyeanwebsitesrstore && git pull` then `ls siyean-laravel/scripts`. Until updated, run the real scripts from `siyean/`: `cd siyean && php scripts/list_users.php` |
+| `Could not open input file: scripts/list_users.php` (or other `scripts/*.php`) | Server clone is older than the commits that add `siyean-laravel/scripts/` | `cd ~/repositories/siyeanwebsitesrstore && git pull` then `ls siyean-laravel/scripts`. Until updated, run the real scripts from `siyean-laravel/siyean/`: `cd siyean-laravel/siyean && php scripts/list_users.php` |
 
 Logs to check:
 

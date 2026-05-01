@@ -4,8 +4,8 @@
 deployment (`public/`), and `scripts/` wrappers for staff/SQLite tasks all live
 here.
 
-**`../siyean/`** holds the legacy POS / storefront / bookings code (PHP + SQLite,
-no framework). Every HTTP request is bridged into `../siyean/public/index.php` via
+**`./siyean/`** holds the legacy POS / storefront / bookings code (PHP + SQLite,
+no framework). Every HTTP request is bridged into `./siyean/public/index.php` via
 `app/Http/Controllers/LegacyBridgeController`. Laravel supplies the front
 controller, middleware, configuration, and future framework features.
 
@@ -19,10 +19,10 @@ composer install
 cp .env.example .env
 php artisan key:generate
 
-# Legacy app: dependencies + SQLite (still stored under ../siyean/storage/)
-cd ../siyean && composer install && mkdir -p storage && touch storage/pos.db && cd ../siyean-laravel
+# Legacy app: dependencies + SQLite (stored under ./siyean/storage/)
+cd siyean && composer install && mkdir -p storage && touch storage/pos.db && cd ..
 
-# Staff accounts (wrappers call ../siyean/scripts/*.php)
+# Staff accounts (wrappers call ./siyean/scripts/*.php)
 php scripts/create_user.php \
     --name="Owner" --email="owner@example.com" \
     --password="ChangeMe123!" --role=admin
@@ -38,7 +38,7 @@ php artisan serve
 Other CLI tools: `php scripts/list_users.php`, `php scripts/reset_password.php`,
 `php scripts/seed_demo_data.php`.
 
-See `../siyean/README.md` for POS feature detail (optional reading).
+See `./siyean/README.md` for POS feature detail (optional reading).
 
 ## Deploying to cPanel
 
@@ -60,13 +60,13 @@ php artisan view:cache
 chmod -R 775 storage bootstrap/cache
 
 # Legacy app (SQLite + vendors), required for the live site
-cd ../siyean
+cd siyean
 composer install --no-dev --optimize-autoloader
 mkdir -p storage
 touch  storage/pos.db
 chmod 775 storage
 chmod 664 storage/pos.db
-cd ../siyean-laravel
+cd ..
 
 # Staff users — run from siyean-laravel/scripts/
 php scripts/create_user.php --name="Owner" \
@@ -91,7 +91,7 @@ Standard session auth lives **outside** the legacy app and uses the Laravel
 | `/auth/reset-password/{token}` | Set new password (link from email) |
 | `/auth/account` | Signed-in profile + logout (when authenticated) |
 
-**Staff / POS** still uses **`/login`** and SQLite (`../siyean/storage/pos.db`)
+**Staff / POS** still uses **`/login`** and SQLite (`./siyean/storage/pos.db`)
 via the legacy bridge — same browser can hold both sessions independently.
 
 Password-reset emails require valid **`MAIL_*`** settings in `.env`. Automatic
@@ -133,7 +133,7 @@ database already matches your migrations — not an error.
   paths match **`/{any?}`** and forward to `LegacyBridgeController@handle`.
 - The controller copies request data into `$_SERVER`, `$_GET`, `$_POST`,
   `$_FILES`, defines `LARAVEL_BRIDGE_MODE`, and `require`s
-  `../siyean/public/index.php`.
+  `./siyean/public/index.php`.
 - The legacy app does its own routing inside `App\Http\HttpKernel`, renders
   via `App\Http\ViewRenderer`, and writes output. The controller captures the
   output buffer and returns it as the Laravel response.
@@ -147,11 +147,11 @@ database already matches your migrations — not an error.
 ## Production Checklist
 
 - [ ] `siyean-laravel/` — `composer install`, `.env`, migrations, caches (above)
-- [ ] `siyean/` — `composer install --no-dev --optimize-autoloader`
-- [ ] `siyean/storage/pos.db` exists and is writable (664)
+- [ ] `siyean-laravel/siyean/` — `composer install --no-dev --optimize-autoloader`
+- [ ] `siyean-laravel/siyean/storage/pos.db` exists and is writable (664)
 - [ ] At least one staff user via `php scripts/create_user.php` (from
       `siyean-laravel/`); list/reset: `list_users.php`, `reset_password.php`
-- [ ] Optional: `siyean/config/app.php` set up (see `app.example.php`) for
+- [ ] Optional: `siyean-laravel/siyean/config/app.php` set up (see `app.example.php`) for
       email / Telegram notifications
 - [ ] Laravel `.env` has `APP_ENV=production`, `APP_DEBUG=false`,
       `APP_URL=https://srmacshop.com`, `APP_KEY` generated

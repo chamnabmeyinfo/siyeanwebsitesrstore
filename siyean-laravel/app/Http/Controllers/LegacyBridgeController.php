@@ -12,7 +12,7 @@ final class LegacyBridgeController extends Controller
 {
     public function handle(Request $request): Response
     {
-        $legacyRoot = base_path('../siyean');
+        $legacyRoot = base_path('siyean');
         $legacyPublic = $legacyRoot . '/public/index.php';
 
         if (!is_file($legacyPublic)) {
