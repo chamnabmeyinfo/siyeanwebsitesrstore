@@ -22,6 +22,12 @@ $basePath = dirname(__DIR__);
 $_ENV['APP_BASE_PATH'] = $basePath;
 $_SERVER['APP_BASE_PATH'] = $basePath;
 
+// Never run Feature tests against production MySQL from `.env` — force SQLite.
+$_ENV['DB_CONNECTION'] = 'sqlite';
+$_SERVER['DB_CONNECTION'] = 'sqlite';
+$_ENV['DB_DATABASE'] = ':memory:';
+$_SERVER['DB_DATABASE'] = ':memory:';
+
 foreach (glob($basePath.'/bootstrap/cache/routes-*.php') ?: [] as $cached) {
     @unlink($cached);
 }

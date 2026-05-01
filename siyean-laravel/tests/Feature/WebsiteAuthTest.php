@@ -49,16 +49,21 @@ final class WebsiteAuthTest extends TestCase
 
     public function test_users_can_register(): void
     {
+        // Avoid collisions with any fixed row or MySQL state if env leaked before bootstrap ran.
+        $email = sprintf('register-%s@example.com', bin2hex(random_bytes(5)));
+
         $response = $this->post('/auth/register', [
             'name' => 'Test User',
-            'email' => 'test@example.com',
+            'email' => $email,
             'password' => 'Password123!',
             'password_confirmation' => 'Password123!',
         ]);
 
-        $this->assertAuthenticated();
+        $response->assertSessionDoesntHaveErrors();
         $response->assertRedirect('/');
-        $this->assertDatabaseHas('users', ['email' => 'test@example.com']);
+        $this->assertDatabaseHas('users', ['email' => $email]);
+        $user = User::query()->where('email', $email)->firstOrFail();
+        $this->assertAuthenticatedAs($user);
     }
 
     public function test_users_can_log_out(): void

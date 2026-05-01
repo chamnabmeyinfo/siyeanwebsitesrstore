@@ -114,10 +114,12 @@ vendor/bin/phpunit tests/Feature/WebsiteAuthTest.php
 ```
 
 PHPUnit uses `tests/bootstrap.php` to set **`APP_BASE_PATH`** (this repo has two
-Composer roots; without it, Laravel can resolve the wrong base path) and to
+Composer roots; without it, Laravel can resolve the wrong base path), to
 delete **`bootstrap/cache/routes-*.php`** so tests never use a stale
 **`route:cache`** from production (which would skip `/auth/*` and return **302**
-from the legacy app).
+from the legacy app), and to force **`DB_CONNECTION=sqlite`** /
+**`DB_DATABASE=:memory:`** so Feature tests do not run against the server MySQL
+from `.env`.
 
 After deploying route changes, rebuild or clear caches:
 `php artisan route:clear` or `php artisan route:cache`.
