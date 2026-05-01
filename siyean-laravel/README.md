@@ -98,6 +98,24 @@ Password-reset emails require valid **`MAIL_*`** settings in `.env`. Automatic
 email verification on register is disabled until you add a verify flow (see
 `App\Models\User::sendEmailVerificationNotification`).
 
+## Running automated tests
+
+PHPUnit lives in **`require-dev`**. Servers installed with
+`composer install --no-dev --optimize-autoloader` **do not** ship PHPUnit, so
+`php artisan test` may say `Command "test" is not defined` — that is normal on
+production; you do not need to run tests there.
+
+Run tests on your PC or CI after a **full** `composer install`, then:
+
+```bash
+php artisan test
+# or
+vendor/bin/phpunit tests/Feature/WebsiteAuthTest.php
+```
+
+`php artisan migrate --force` reporting **Nothing to migrate** means the
+database already matches your migrations — not an error.
+
 ## How the bridge works
 
 - Explicit Laravel routes (for example `/auth/*`) are handled first; **all other**
