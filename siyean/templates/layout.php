@@ -58,18 +58,28 @@ function user_initials(string $name): string
     <title>Mac POS</title>
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-    <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600&display=swap" rel="stylesheet" />
+    <link
+      href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,400;0,9..40,500;0,9..40,600;0,9..40,700&family=Space+Grotesk:wght@500;600;700&display=swap"
+      rel="stylesheet"
+    />
     <style>
       :root {
-        font-family: "Space Grotesk", -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+        font-family: "DM Sans", -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
         color: var(--text-color);
         background: var(--body-bg);
+      }
+
+      h1,
+      h2,
+      h3,
+      .brand-name {
+        font-family: "Space Grotesk", "DM Sans", sans-serif;
       }
       :root,
       :root[data-theme="dark"],
       :root[data-theme="system"][data-system-pref="dark"],
       :root:not([data-theme]) {
-        --body-bg: radial-gradient(circle at top, #18233a, #05070f 60%);
+        --body-bg: radial-gradient(ellipse 120% 80% at 50% -20%, #1a2744 0%, #0a0e18 45%, #05070f 100%);
         --panel-bg: rgba(15, 23, 42, 0.65);
         --panel-border: rgba(59, 130, 246, 0.08);
         --text-color: #e2e8f0;
@@ -83,7 +93,7 @@ function user_initials(string $name): string
       }
       :root[data-theme="light"],
       :root[data-theme="system"][data-system-pref="light"] {
-        --body-bg: #f5f7fb;
+        --body-bg: #f3f5f8;
         --panel-bg: #ffffff;
         --panel-border: rgba(15, 23, 42, 0.08);
         --text-color: #0f172a;
@@ -120,10 +130,10 @@ function user_initials(string $name): string
           linear-gradient(145deg, rgba(17, 26, 46, 0.92) 0%, rgba(15, 23, 42, 0.88) 45%, rgba(30, 58, 138, 0.35) 100%);
         border: 1px solid rgba(96, 165, 250, 0.18);
         box-shadow:
-          0 0 0 1px rgba(255, 255, 255, 0.04) inset,
-          0 1px 0 rgba(255, 255, 255, 0.06) inset,
-          0 28px 56px -12px rgba(2, 6, 23, 0.65),
-          0 12px 24px -16px rgba(37, 99, 235, 0.35);
+          0 0 0 1px rgba(255, 255, 255, 0.05) inset,
+          0 1px 0 rgba(255, 255, 255, 0.05) inset,
+          0 20px 48px -14px rgba(2, 6, 23, 0.55),
+          0 8px 20px -12px rgba(37, 99, 235, 0.22);
         backdrop-filter: blur(12px);
       }
       .main-header::before {
@@ -443,7 +453,7 @@ function user_initials(string $name): string
         backdrop-filter: blur(16px);
         padding: 1.25rem;
         border-radius: 1rem;
-        box-shadow: 0 20px 45px rgba(2, 6, 23, 0.15);
+        box-shadow: 0 12px 36px rgba(2, 6, 23, 0.12);
         border: 1px solid var(--panel-border);
       }
       form.panel {

@@ -7,13 +7,17 @@
     <title>Mac POS – Sign in</title>
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-    <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600&display=swap" rel="stylesheet" />
+    <link
+      href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,400;0,9..40,600;0,9..40,700&family=Space+Grotesk:wght@600;700&display=swap"
+      rel="stylesheet"
+    />
     <style>
       :root {
-        font-family: "Space Grotesk", -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
-        background: radial-gradient(circle at top, #18233a, #05070f 70%);
-        color: #e2e8f0;
+        font-family: "DM Sans", -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+        background: radial-gradient(ellipse 120% 90% at 50% 0%, #1e2d4a 0%, #0a0e18 55%, #05070f 100%);
+        color: #e8edf5;
       }
+
       body {
         margin: 0;
         min-height: 100vh;
@@ -32,6 +36,8 @@
       }
       h1 {
         margin: 0 0 0.5rem;
+        font-family: "Space Grotesk", "DM Sans", sans-serif;
+        letter-spacing: -0.02em;
       }
       label {
         display: block;
