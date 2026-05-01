@@ -18,6 +18,8 @@
         </include>
     </source>
     <php>
+        <!-- Stable URLs for HTTP assertions even when the repo .env uses production APP_URL. -->
+        <env name="APP_URL" value="http://localhost"/>
         <env name="APP_ENV" value="testing"/>
         <env name="APP_MAINTENANCE_DRIVER" value="file"/>
         <env name="BCRYPT_ROUNDS" value="4"/>

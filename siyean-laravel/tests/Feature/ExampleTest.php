@@ -3,6 +3,7 @@
 namespace Tests\Feature;
 
 // use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Support\Uri;
 use Tests\TestCase;
 
 class ExampleTest extends TestCase
@@ -24,6 +25,10 @@ class ExampleTest extends TestCase
     {
         $response = $this->get('/dashboard');
 
-        $response->assertRedirect('/login');
+        $response->assertRedirect();
+        $location = $response->headers->get('Location');
+        $this->assertNotNull($location);
+        // Compare path only — avoids failures when .env APP_URL differs from the redirect host.
+        $this->assertSame('/login', Uri::of($location)->path(), 'Unexpected redirect Location: '.$location);
     }
 }
