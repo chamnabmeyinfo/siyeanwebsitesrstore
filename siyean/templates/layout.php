@@ -268,14 +268,6 @@ function user_initials(string $name): string
         gap: 0.12rem;
         min-width: 0;
       }
-      .brand-kicker {
-        font-size: 0.65rem;
-        font-weight: 600;
-        letter-spacing: 0.14em;
-        text-transform: uppercase;
-        color: var(--muted);
-        line-height: 1.2;
-      }
       .brand-name {
         margin: 0;
         font-size: clamp(1.2rem, 2.4vw, 1.5rem);
@@ -945,7 +937,6 @@ function user_initials(string $name): string
             </div>
           </a>
           <div class="brand-text">
-            <span class="brand-kicker">Mac specialty retail</span>
             <h1 class="brand-name">SR Mac Shop</h1>
             <p class="brand-tagline">Premier Mac studio, showroom &amp; operations</p>
           </div>
