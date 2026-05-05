@@ -87,6 +87,31 @@ final class WebsiteAuthTest extends TestCase
         Notification::assertSentTo($user, ResetPassword::class);
     }
 
+    public function test_password_reset_request_is_blocked_for_non_credential_accounts(): void
+    {
+        Notification::fake();
+
+        $response = $this->post('/auth/forgot-password', ['email' => 'not-found@example.com']);
+
+        $response->assertSessionHasErrors('email');
+        Notification::assertNothingSent();
+    }
+
+    public function test_password_reset_request_is_temporarily_banned_for_ten_minutes_after_non_credential_attempt(): void
+    {
+        $email = 'blocked@example.com';
+
+        $firstResponse = $this->post('/auth/forgot-password', ['email' => $email]);
+        $firstResponse->assertSessionHasErrors('email');
+
+        $secondResponse = $this->post('/auth/forgot-password', ['email' => $email]);
+        $secondResponse->assertSessionHasErrors('email');
+        $this->assertStringContainsString(
+            'temporarily blocked for this account',
+            session('errors')->first('email')
+        );
+    }
+
     public function test_password_can_be_reset_with_valid_token(): void
     {
         $user = User::factory()->create();
