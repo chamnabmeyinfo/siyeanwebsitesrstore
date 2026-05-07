@@ -7,7 +7,6 @@ use App\Models\User;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Password;
-use Illuminate\Support\Facades\RateLimiter;
 use Illuminate\View\View;
 
 final class PasswordResetLinkController extends Controller
@@ -24,31 +23,18 @@ final class PasswordResetLinkController extends Controller
         ]);
 
         $email = strtolower((string) $request->string('email'));
-        $lockKey = sprintf('password-reset:ban:%s|%s', $email, $request->ip());
-
-        if (RateLimiter::tooManyAttempts($lockKey, 1)) {
-            $seconds = RateLimiter::availableIn($lockKey);
-
-            return back()->withErrors([
-                'email' => __('Password reset is temporarily blocked for this account. Try again in :seconds seconds.', ['seconds' => $seconds]),
-            ])->onlyInput('email');
-        }
 
         $user = User::query()
             ->where('email', $email)
             ->first();
 
-        if (! $user instanceof User || blank($user->password)) {
-            RateLimiter::hit($lockKey, 600);
-
+        if (! $user instanceof User) {
             return back()->withErrors([
-                'email' => __('Password reset is temporarily blocked for this account. Try again in 10 minutes.'),
+                'email' => __('We could not find an account with that email address.'),
             ])->onlyInput('email');
         }
 
-        RateLimiter::clear($lockKey);
-
-        $status = Password::sendResetLink($request->only('email'));
+        $status = Password::sendResetLink(['email' => $email]);
 
         return $status === Password::RESET_LINK_SENT
             ? back()->with('status', __($status))
