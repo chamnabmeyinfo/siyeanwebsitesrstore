@@ -244,21 +244,31 @@ final class HttpKernel
 
     private function handleForgotPasswordPost(): void
     {
-        $email = trim($_POST['email'] ?? '');
+        $email = strtolower(trim($_POST['email'] ?? ''));
         if (!filter_var($email, FILTER_VALIDATE_EMAIL)) {
             $this->view->flash('error', 'Please enter a valid email address.');
+            $this->view->redirect('/forgot-password');
+        }
+
+        if (!$this->app->users->findByEmail($email)) {
+            $this->view->flash('error', 'We could not find an account with that email address.');
             $this->view->redirect('/forgot-password');
         }
 
         $token = bin2hex(random_bytes(32));
         $expiresAt = gmdate('Y-m-d H:i:s', time() + 1800);
         $stored = $this->app->users->createPasswordResetToken($email, $token, $expiresAt);
-        if ($stored) {
-            $this->sendResetPasswordEmail($email, $token);
+        if (!$stored) {
+            $this->view->flash('error', 'Unable to prepare password reset. Please try again.');
+            $this->view->redirect('/forgot-password');
         }
 
-        // Do not reveal whether the email exists.
-        $this->view->flash('success', 'If an account exists, we emailed a password reset link.');
+        if (!$this->sendResetPasswordEmail($email, $token)) {
+            $this->view->flash('error', 'Unable to send reset email right now. Please contact support.');
+            $this->view->redirect('/forgot-password');
+        }
+
+        $this->view->flash('success', 'We emailed your password reset link.');
         $this->view->redirect('/forgot-password');
     }
 
@@ -299,7 +309,7 @@ final class HttpKernel
         $this->view->redirect('/login');
     }
 
-    private function sendResetPasswordEmail(string $email, string $token): void
+    private function sendResetPasswordEmail(string $email, string $token): bool
     {
         $scheme = 'http';
         $https = $_SERVER['HTTPS'] ?? null;
@@ -319,7 +329,7 @@ final class HttpKernel
             'Content-Type: text/plain; charset=UTF-8',
         ]);
 
-        @mail($email, $subject, $message, $headers);
+        return @mail($email, $subject, $message, $headers);
     }
 
     private function renderPublicStorefront(): void
