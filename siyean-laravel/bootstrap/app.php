@@ -19,6 +19,8 @@ return Application::configure(basePath: dirname(__DIR__))
             'auth' => \Illuminate\Auth\Middleware\Authenticate::class,
             'guest' => \Illuminate\Auth\Middleware\RedirectIfAuthenticated::class,
         ]);
+        // Authenticated users hitting guest-only pages (login, forgot-password) go to /account.
+        $middleware->redirectUsersTo(fn () => route('account'));
     })
     ->withExceptions(function (Exceptions $exceptions): void {
         //
