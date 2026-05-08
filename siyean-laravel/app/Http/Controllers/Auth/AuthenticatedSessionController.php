@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Auth;
 
 use App\Http\Controllers\Controller;
+use App\Models\User;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -52,7 +53,30 @@ final class AuthenticatedSessionController extends Controller
             ])->onlyInput('email');
         }
 
+        $user = Auth::user();
+
+        if ($user instanceof User && ! $user->is_active) {
+            // Important: log the user out before returning so the failed-login
+            // response cannot be used to enumerate which accounts exist but are
+            // disabled (matching the wrong-password message).
+            Auth::guard('web')->logout();
+            $request->session()->invalidate();
+            $request->session()->regenerateToken();
+
+            RateLimiter::hit($throttleKey);
+
+            return back()->withErrors([
+                'email' => __('These credentials do not match our records.'),
+            ])->onlyInput('email');
+        }
+
         RateLimiter::clear($throttleKey);
+
+        if ($user instanceof User) {
+            // forceFill keeps the cast working even if the column is later
+            // moved from the model's $fillable list.
+            $user->forceFill(['last_login_at' => now()])->save();
+        }
 
         $request->session()->regenerate();
 

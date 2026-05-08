@@ -24,6 +24,12 @@ final class NewPasswordController extends Controller
 
     public function store(Request $request): RedirectResponse
     {
+        // Normalize email before validation so the token lookup matches the
+        // lowercase email that was stored when the reset link was sent.
+        $request->merge([
+            'email' => strtolower((string) $request->input('email', '')),
+        ]);
+
         $request->validate([
             'token' => ['required'],
             'email' => ['required', 'email'],

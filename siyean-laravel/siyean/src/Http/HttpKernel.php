@@ -6,15 +6,25 @@ namespace App\Http;
 
 use App\Http\Form\InventoryFormMapper;
 use App\Http\Form\SaleFormMapper;
+use App\PasswordPolicy;
+use App\Support\FileRateLimiter;
 use Throwable;
 
 final class HttpKernel
 {
+    /** Login lockout: 5 failed attempts per 15-minute rolling window per email+ip. */
+    private const LOGIN_MAX_ATTEMPTS = 5;
+    private const LOGIN_WINDOW_SECONDS = 900;
+
+    private readonly FileRateLimiter $loginThrottle;
+
     public function __construct(
         private readonly WebContainer $app,
         private readonly AuthGate $auth,
         private readonly ViewRenderer $view,
+        ?FileRateLimiter $loginThrottle = null,
     ) {
+        $this->loginThrottle = $loginThrottle ?? new FileRateLimiter();
     }
 
     public function dispatch(string $method, string $requestPath): void
@@ -222,16 +232,49 @@ final class HttpKernel
             $this->view->redirect('/login');
         }
 
+        $throttleKey = $this->loginThrottleKey($email);
+
+        if ($this->loginThrottle->tooManyAttempts($throttleKey, self::LOGIN_MAX_ATTEMPTS, self::LOGIN_WINDOW_SECONDS)) {
+            $secondsRemaining = $this->loginThrottle->availableIn($throttleKey, self::LOGIN_WINDOW_SECONDS);
+            $minutes = max(1, (int) ceil($secondsRemaining / 60));
+            $this->view->flash('error', sprintf(
+                'Too many sign-in attempts. Please try again in about %d minute%s.',
+                $minutes,
+                $minutes === 1 ? '' : 's'
+            ));
+            $this->view->redirect('/login');
+        }
+
         $user = $this->app->users->findByEmail($email);
         if (!$user || !password_verify($password, $user['password_hash'])) {
+            $this->loginThrottle->hit($throttleKey, self::LOGIN_WINDOW_SECONDS);
             $this->view->flash('error', 'Invalid credentials.');
             $this->view->redirect('/login');
         }
+
+        // Inactive accounts must surface the same "Invalid credentials" flash
+        // as a wrong password so an attacker cannot probe which addresses are
+        // disabled vs nonexistent.
+        if (!\App\UserRepository::isActive($user)) {
+            $this->loginThrottle->hit($throttleKey, self::LOGIN_WINDOW_SECONDS);
+            $this->view->flash('error', 'Invalid credentials.');
+            $this->view->redirect('/login');
+        }
+
+        $this->loginThrottle->clear($throttleKey);
+        $this->app->users->recordLoginAt((int) $user['id']);
 
         $_SESSION['user_id'] = $user['id'];
         session_regenerate_id(true);
         $this->view->flash('success', 'Welcome back!');
         $this->view->redirect('/dashboard');
+    }
+
+    private function loginThrottleKey(string $email): string
+    {
+        $ip = $_SERVER['REMOTE_ADDR'] ?? 'unknown-ip';
+
+        return strtolower($email) . '|' . $ip;
     }
 
     private function handleLogoutPost(): void
@@ -250,25 +293,25 @@ final class HttpKernel
             $this->view->redirect('/forgot-password');
         }
 
-        if (!$this->app->users->findByEmail($email)) {
-            $this->view->flash('error', 'We could not find an account with that email address.');
-            $this->view->redirect('/forgot-password');
+        // Always show the same neutral message regardless of whether the
+        // account exists. This prevents the form from being used to enumerate
+        // valid staff email addresses.
+        $neutralMessage = 'If a staff account exists for that address, we have emailed a password reset link.';
+
+        $user = $this->app->users->findByEmail($email);
+        if ($user !== null) {
+            $token = bin2hex(random_bytes(32));
+            $expiresAt = gmdate('Y-m-d H:i:s', time() + 1800);
+            if ($this->app->users->createPasswordResetToken($email, $token, $expiresAt)) {
+                // Email failures are intentionally swallowed here so that the
+                // response stays identical for known and unknown addresses.
+                // Operators can still see deliverability problems via the mail
+                // server logs / the legacy mail() return path.
+                @$this->sendResetPasswordEmail($email, $token);
+            }
         }
 
-        $token = bin2hex(random_bytes(32));
-        $expiresAt = gmdate('Y-m-d H:i:s', time() + 1800);
-        $stored = $this->app->users->createPasswordResetToken($email, $token, $expiresAt);
-        if (!$stored) {
-            $this->view->flash('error', 'Unable to prepare password reset. Please try again.');
-            $this->view->redirect('/forgot-password');
-        }
-
-        if (!$this->sendResetPasswordEmail($email, $token)) {
-            $this->view->flash('error', 'Unable to send reset email right now. Please contact support.');
-            $this->view->redirect('/forgot-password');
-        }
-
-        $this->view->flash('success', 'We emailed your password reset link.');
+        $this->view->flash('success', $neutralMessage);
         $this->view->redirect('/forgot-password');
     }
 
@@ -284,8 +327,9 @@ final class HttpKernel
             $this->view->redirect('/forgot-password');
         }
 
-        if ($password === '' || strlen($password) < 8) {
-            $this->view->flash('error', 'Password must be at least 8 characters.');
+        $policyError = PasswordPolicy::validate($password);
+        if ($policyError !== null) {
+            $this->view->flash('error', $policyError);
             $this->view->redirect('/reset-password?email=' . urlencode($email) . '&token=' . urlencode($token));
         }
 

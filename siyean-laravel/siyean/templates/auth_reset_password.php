@@ -7,10 +7,10 @@
   <input type="hidden" name="token" value="<?= htmlspecialchars($token ?? '') ?>" />
 
   <label>New password
-    <input type="password" name="password" placeholder="At least 8 characters" required minlength="8" />
+    <input type="password" name="password" placeholder="Min 12 chars, mixed case, with a digit" required minlength="12" />
   </label>
   <label>Confirm password
-    <input type="password" name="password_confirmation" placeholder="Re-enter new password" required minlength="8" />
+    <input type="password" name="password_confirmation" placeholder="Re-enter new password" required minlength="12" />
   </label>
 
   <button type="submit">Reset password</button>
