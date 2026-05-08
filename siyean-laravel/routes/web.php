@@ -1,5 +1,10 @@
 <?php
 
+use App\Http\Controllers\Admin\BookingController;
+use App\Http\Controllers\Admin\DashboardController;
+use App\Http\Controllers\Admin\ProductController;
+use App\Http\Controllers\Admin\SaleController;
+use App\Http\Controllers\Admin\StoreMenuController;
 use App\Http\Controllers\Auth\AuthenticatedSessionController;
 use App\Http\Controllers\Auth\NewPasswordController;
 use App\Http\Controllers\Auth\PasswordResetLinkController;
@@ -26,6 +31,31 @@ Route::middleware('auth')->group(function (): void {
     Route::get('account', [WebsiteAccountController::class, 'show'])->name('account');
     Route::post('logout', [AuthenticatedSessionController::class, 'destroy'])->name('logout');
 });
+
+Route::middleware(['auth', 'owner'])
+    ->prefix('admin')
+    ->name('admin.')
+    ->group(function (): void {
+        Route::get('/', DashboardController::class)->name('dashboard');
+
+        Route::get('products/import', [ProductController::class, 'importForm'])->name('products.import.form');
+        Route::post('products/import', [ProductController::class, 'import'])->name('products.import');
+        Route::get('products/export', [ProductController::class, 'export'])->name('products.export');
+        Route::post('products/{product}/adjust', [ProductController::class, 'adjust'])->name('products.adjust');
+        Route::resource('products', ProductController::class)->except(['show']);
+
+        Route::get('sales', [SaleController::class, 'index'])->name('sales.index');
+        Route::get('sales/create', [SaleController::class, 'create'])->name('sales.create');
+        Route::post('sales', [SaleController::class, 'store'])->name('sales.store');
+
+        Route::get('bookings', [BookingController::class, 'index'])->name('bookings.index');
+        Route::patch('bookings/{booking}/status', [BookingController::class, 'updateStatus'])->name('bookings.status');
+
+        Route::get('store-menu', [StoreMenuController::class, 'index'])->name('store-menu.index');
+        Route::post('store-menu', [StoreMenuController::class, 'store'])->name('store-menu.store');
+        Route::post('store-menu/save', [StoreMenuController::class, 'save'])->name('store-menu.save');
+        Route::delete('store-menu/{storeMenu}', [StoreMenuController::class, 'destroy'])->name('store-menu.destroy');
+    });
 
 // Legacy POS uses PHP native sessions (`$_SESSION['user_id']`). Laravel's StartSession must not run first,
 // or session_start() becomes a no-op and staff login never persists across requests.

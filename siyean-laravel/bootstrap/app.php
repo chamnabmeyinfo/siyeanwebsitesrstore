@@ -18,12 +18,13 @@ return Application::configure(basePath: dirname(__DIR__))
         $middleware->alias([
             'auth' => \Illuminate\Auth\Middleware\Authenticate::class,
             'guest' => \Illuminate\Auth\Middleware\RedirectIfAuthenticated::class,
+            'owner' => \App\Http\Middleware\EnsureUserIsOwner::class,
         ]);
-        // Authenticated users hitting guest-only pages go to /dashboard (owners) or /account (others).
+        // Authenticated users hitting guest-only pages go to /admin (owners) or /account (others).
         $middleware->redirectUsersTo(function () {
             $user = \Illuminate\Support\Facades\Auth::user();
             if ($user && $user->role === 'owner') {
-                return '/dashboard';
+                return '/admin';
             }
             return route('account');
         });

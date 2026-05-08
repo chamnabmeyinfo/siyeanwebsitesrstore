@@ -11,7 +11,6 @@ use Illuminate\Support\Facades\RateLimiter;
 use Illuminate\Support\Str;
 use Illuminate\Validation\ValidationException;
 use Illuminate\View\View;
-use SQLite3;
 
 final class AuthenticatedSessionController extends Controller
 {
@@ -57,9 +56,6 @@ final class AuthenticatedSessionController extends Controller
         $user = Auth::user();
 
         if ($user instanceof User && ! $user->is_active) {
-            // Important: log the user out before returning so the failed-login
-            // response cannot be used to enumerate which accounts exist but are
-            // disabled (matching the wrong-password message).
             Auth::guard('web')->logout();
             $request->session()->invalidate();
             $request->session()->regenerateToken();
@@ -74,16 +70,13 @@ final class AuthenticatedSessionController extends Controller
         RateLimiter::clear($throttleKey);
 
         if ($user instanceof User) {
-            // forceFill keeps the cast working even if the column is later
-            // moved from the model's $fillable list.
             $user->forceFill(['last_login_at' => now()])->save();
         }
 
         $request->session()->regenerate();
 
-        if ($user instanceof User && $user->role === 'owner') {
-            $this->startLegacySession($user->email);
-            return redirect('/dashboard');
+        if ($user instanceof User && ($user->role ?? null) === 'owner') {
+            return redirect('/admin');
         }
 
         return redirect()->intended(route('account'));
@@ -97,30 +90,6 @@ final class AuthenticatedSessionController extends Controller
         $request->session()->regenerateToken();
 
         return redirect('/');
-    }
-
-    private function startLegacySession(string $email): void
-    {
-        $dbPath = base_path('siyean/storage/pos.db');
-        if (!is_file($dbPath)) {
-            return;
-        }
-
-        $db = new SQLite3($dbPath, SQLITE3_OPEN_READONLY);
-        $stmt = $db->prepare('SELECT id FROM users WHERE email = ? AND is_active = 1 LIMIT 1');
-        $stmt->bindValue(1, strtolower($email));
-        $row = $stmt->execute()->fetchArray(SQLITE3_ASSOC);
-        $db->close();
-
-        if (!$row) {
-            return;
-        }
-
-        if (session_status() === PHP_SESSION_NONE) {
-            session_start();
-        }
-        $_SESSION['user_id'] = $row['id'];
-        session_write_close();
     }
 
     private function throttleKey(Request $request, string $email): string
