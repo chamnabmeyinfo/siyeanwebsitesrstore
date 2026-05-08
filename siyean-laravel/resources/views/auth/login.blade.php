@@ -4,13 +4,13 @@
 
 @section('content')
     <h1>{{ __('Sign in') }}</h1>
-    <p class="muted" style="margin-top:0;text-align:left;margin-bottom:1rem;">{{ __('Website account (MySQL). Staff POS sign-in stays at') }} <a href="/login">/login</a>.</p>
+    <p class="muted" style="margin-top:0;text-align:left;margin-bottom:1rem;">{{ __('Sign in to your account to continue.') }}</p>
 
     @if (session('status'))
         <p class="success">{{ session('status') }}</p>
     @endif
 
-    <form method="post" action="{{ url('/auth/login') }}">
+    <form method="post" action="{{ route('login') }}">
         @csrf
         <label for="email">{{ __('Email') }}</label>
         <input id="email" type="email" name="email" value="{{ old('email') }}" required autofocus autocomplete="username">

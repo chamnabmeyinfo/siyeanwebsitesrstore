@@ -5,7 +5,7 @@
 @section('content')
     <h1>{{ __('Reset password') }}</h1>
 
-    <form method="post" action="{{ url('/auth/reset-password') }}">
+    <form method="post" action="{{ route('password.update') }}">
         @csrf
         <input type="hidden" name="token" value="{{ $token }}">
 

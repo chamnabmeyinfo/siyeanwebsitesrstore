@@ -10,7 +10,7 @@
         <p class="success">{{ session('status') }}</p>
     @endif
 
-    <form method="post" action="{{ url('/auth/forgot-password') }}">
+    <form method="post" action="{{ route('password.email') }}">
         @csrf
         <label for="email">{{ __('Email') }}</label>
         <input id="email" type="email" name="email" value="{{ old('email') }}" required autofocus autocomplete="username">

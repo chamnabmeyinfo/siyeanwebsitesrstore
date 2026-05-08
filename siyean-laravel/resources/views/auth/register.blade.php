@@ -4,9 +4,9 @@
 
 @section('content')
     <h1>{{ __('Create account') }}</h1>
-    <p class="muted" style="margin-top:0;text-align:left;margin-bottom:1rem;">{{ __('For customer / general website access. Store staff still use') }} <a href="/login">/login</a>.</p>
+    <p class="muted" style="margin-top:0;text-align:left;margin-bottom:1rem;">{{ __('Create your account to get started.') }}</p>
 
-    <form method="post" action="{{ url('/auth/register') }}">
+    <form method="post" action="{{ route('register') }}">
         @csrf
         <label for="name">{{ __('Name') }}</label>
         <input id="name" type="text" name="name" value="{{ old('name') }}" required autofocus autocomplete="name">
