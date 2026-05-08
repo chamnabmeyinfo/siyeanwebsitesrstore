@@ -51,11 +51,11 @@ as `php scripts/*.php` there (wrappers). The steps below apply when developing
    ```
    php scripts/seed_inventory.php
    ```
-5. Create at least one admin user:
+5. Create at least one admin user (password must be ≥12 chars with mixed case + a digit):
    ```
    php scripts/create_user.php --name="Store Owner" --email="owner@example.com" --password="SuperSecure123" --role=admin
    ```
-6. Sign in at http://127.0.0.1:8000/login (admins can invite clerks with `--role=clerk`).
+6. Sign in at http://127.0.0.1:8000/login (allowed roles today: `admin`, `ecommerce`).
    Staff self-service reset is available via:
    - `GET /forgot-password`
    - `GET /reset-password?email=<email>&token=<token>`

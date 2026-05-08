@@ -159,12 +159,44 @@ final class UserRepository
     }
 
     /**
-     * @return list<array{id:int|string,name:string,email:string,role:string,created_at:string}>
+     * Stamp the user's most recent successful login. Best-effort: returns
+     * false if the row is missing (e.g. account deleted between password
+     * verify and this call) without raising.
+     */
+    public function recordLoginAt(int $userId): bool
+    {
+        $stmt = $this->db->prepare(
+            'UPDATE users SET last_login_at = CURRENT_TIMESTAMP WHERE id = :id'
+        );
+        $stmt->execute([':id' => $userId]);
+
+        return $stmt->rowCount() > 0;
+    }
+
+    /**
+     * Returns true for accounts that are allowed to sign in. Treats a missing
+     * is_active column (older DB pre-migration) as active for backwards
+     * compatibility — Database::migrate() always adds the column on boot,
+     * but defensive callers should still pass an authoritative row.
+     *
+     * @param array<string, mixed> $row
+     */
+    public static function isActive(array $row): bool
+    {
+        if (!array_key_exists('is_active', $row)) {
+            return true;
+        }
+
+        return (int) $row['is_active'] === 1;
+    }
+
+    /**
+     * @return list<array{id:int|string,name:string,email:string,role:string,is_active:int,last_login_at:?string,created_at:string}>
      */
     public function listUsers(): array
     {
         $stmt = $this->db->query(
-            'SELECT id, name, email, role, created_at FROM users ORDER BY id ASC'
+            'SELECT id, name, email, role, is_active, last_login_at, created_at FROM users ORDER BY id ASC'
         );
 
         return $stmt->fetchAll(PDO::FETCH_ASSOC);

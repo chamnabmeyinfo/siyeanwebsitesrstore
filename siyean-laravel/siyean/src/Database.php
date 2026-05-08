@@ -91,6 +91,8 @@ final class Database
             email TEXT UNIQUE NOT NULL,
             password_hash TEXT NOT NULL,
             role TEXT NOT NULL DEFAULT 'admin',
+            is_active INTEGER NOT NULL DEFAULT 1,
+            last_login_at TEXT,
             created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP
         );
 
@@ -122,6 +124,8 @@ final class Database
         self::ensureColumn('inventory', 'visible_online', 'INTEGER NOT NULL DEFAULT 1');
         self::backfillInventorySlugs();
         self::ensureColumn('users', 'role', "TEXT NOT NULL DEFAULT 'admin'");
+        self::ensureColumn('users', 'is_active', 'INTEGER NOT NULL DEFAULT 1');
+        self::ensureColumn('users', 'last_login_at', 'TEXT');
     }
 
     private static function ensureColumn(string $table, string $column, string $definition): void

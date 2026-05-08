@@ -29,7 +29,16 @@ final class AuthGate
         }
         $row = $this->users->findById((int) $_SESSION['user_id']);
 
-        return $this->cachedUser = $row ?: null;
+        // If the account was deleted or disabled mid-session, drop the session
+        // immediately so subsequent middleware sees an unauthenticated user
+        // and any privileged route forces a fresh login attempt.
+        if (!$row || !UserRepository::isActive($row)) {
+            unset($_SESSION['user_id']);
+
+            return $this->cachedUser = null;
+        }
+
+        return $this->cachedUser = $row;
     }
 
     public function requireAuth(ViewRenderer $respond): void

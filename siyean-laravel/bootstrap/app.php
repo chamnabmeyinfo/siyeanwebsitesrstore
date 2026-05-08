@@ -20,7 +20,7 @@ return Application::configure(basePath: dirname(__DIR__))
             'guest' => \Illuminate\Auth\Middleware\RedirectIfAuthenticated::class,
             'owner' => \App\Http\Middleware\EnsureUserIsOwner::class,
         ]);
-
+        // Authenticated users hitting guest-only pages go to /admin (owners) or /account (others).
         $middleware->redirectUsersTo(function () {
             $user = \Illuminate\Support\Facades\Auth::user();
             if ($user && $user->role === 'owner') {

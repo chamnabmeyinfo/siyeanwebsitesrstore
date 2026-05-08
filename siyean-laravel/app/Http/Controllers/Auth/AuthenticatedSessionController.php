@@ -53,11 +53,28 @@ final class AuthenticatedSessionController extends Controller
             ])->onlyInput('email');
         }
 
+        $user = Auth::user();
+
+        if ($user instanceof User && ! $user->is_active) {
+            Auth::guard('web')->logout();
+            $request->session()->invalidate();
+            $request->session()->regenerateToken();
+
+            RateLimiter::hit($throttleKey);
+
+            return back()->withErrors([
+                'email' => __('These credentials do not match our records.'),
+            ])->onlyInput('email');
+        }
+
         RateLimiter::clear($throttleKey);
+
+        if ($user instanceof User) {
+            $user->forceFill(['last_login_at' => now()])->save();
+        }
 
         $request->session()->regenerate();
 
-        $user = Auth::user();
         if ($user instanceof User && ($user->role ?? null) === 'owner') {
             return redirect('/admin');
         }
