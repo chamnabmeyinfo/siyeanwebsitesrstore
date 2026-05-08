@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Auth;
 
 use App\Http\Controllers\Controller;
+use App\Models\User;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -56,7 +57,12 @@ final class AuthenticatedSessionController extends Controller
 
         $request->session()->regenerate();
 
-        return redirect()->intended('/');
+        $user = Auth::user();
+        if ($user instanceof User && ($user->role ?? null) === 'owner') {
+            return redirect('/admin');
+        }
+
+        return redirect()->intended(route('account'));
     }
 
     public function destroy(Request $request): RedirectResponse

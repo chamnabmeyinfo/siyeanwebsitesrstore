@@ -18,7 +18,16 @@ return Application::configure(basePath: dirname(__DIR__))
         $middleware->alias([
             'auth' => \Illuminate\Auth\Middleware\Authenticate::class,
             'guest' => \Illuminate\Auth\Middleware\RedirectIfAuthenticated::class,
+            'owner' => \App\Http\Middleware\EnsureUserIsOwner::class,
         ]);
+
+        $middleware->redirectUsersTo(function () {
+            $user = \Illuminate\Support\Facades\Auth::user();
+            if ($user && $user->role === 'owner') {
+                return '/admin';
+            }
+            return route('account');
+        });
     })
     ->withExceptions(function (Exceptions $exceptions): void {
         //
