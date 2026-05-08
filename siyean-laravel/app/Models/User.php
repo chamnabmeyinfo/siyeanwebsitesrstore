@@ -19,11 +19,20 @@ class User extends Authenticatable
      *
      * @var list<string>
      */
+    const ROLE_OWNER = 'owner';
+    const ROLE_CUSTOMER = 'customer';
+
     protected $fillable = [
         'name',
         'email',
         'password',
+        'role',
     ];
+
+    public function isOwner(): bool
+    {
+        return $this->role === self::ROLE_OWNER;
+    }
 
     /**
      * @var list<string>
