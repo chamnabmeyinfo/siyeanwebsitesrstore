@@ -7,6 +7,9 @@ use App\Models\User;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Password;
+use Illuminate\Support\Facades\RateLimiter;
+use Illuminate\Support\Str;
+use Illuminate\Validation\ValidationException;
 use Illuminate\View\View;
 
 final class PasswordResetLinkController extends Controller
@@ -22,7 +25,22 @@ final class PasswordResetLinkController extends Controller
             'email' => ['required', 'email'],
         ]);
 
-        $email = strtolower((string) $request->string('email'));
+        $email = strtolower(trim((string) $request->string('email')));
+
+        $throttleKey = Str::lower($email).'|'.$request->ip();
+
+        if (RateLimiter::tooManyAttempts($throttleKey, 5)) {
+            $seconds = RateLimiter::availableIn($throttleKey);
+
+            throw ValidationException::withMessages([
+                'email' => trans('auth.throttle', [
+                    'seconds' => $seconds,
+                    'minutes' => (int) ceil($seconds / 60),
+                ]),
+            ])->onlyInput('email');
+        }
+
+        RateLimiter::hit($throttleKey, 60);
 
         // Always return the same neutral response so the form does not reveal
         // whether an account exists for the supplied address (avoids account

@@ -30,8 +30,10 @@ final class NewPasswordController extends Controller
             'password' => ['required', 'confirmed', PasswordRule::defaults()],
         ]);
 
+        $email = strtolower(trim((string) $request->string('email')));
+
         $status = Password::reset(
-            $request->only('email', 'password', 'password_confirmation', 'token'),
+            array_merge($request->only('password', 'password_confirmation', 'token'), ['email' => $email]),
             function (User $user, string $password): void {
                 $user->forceFill([
                     'password' => $password,
