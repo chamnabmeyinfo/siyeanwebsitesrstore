@@ -107,7 +107,7 @@ foreach ($inventorySamples as $sample) {
 
 $demoUsers = [
     ['name' => 'Demo Admin', 'email' => 'demo-admin@srmacshop.com', 'password' => 'DemoAdmin@123', 'role' => 'admin'],
-    ['name' => 'Demo Clerk', 'email' => 'demo-clerk@srmacshop.com', 'password' => 'DemoClerk@123', 'role' => 'clerk'],
+    ['name' => 'Demo Ecommerce', 'email' => 'demo-ecommerce@srmacshop.com', 'password' => 'DemoEcom@1234', 'role' => 'ecommerce'],
 ];
 
 $createdUsers = 0;
@@ -210,4 +210,4 @@ echo "Sales: {$salesCount}" . PHP_EOL;
 echo "Bookings: {$bookingCount}" . PHP_EOL;
 echo 'Demo login accounts:' . PHP_EOL;
 echo '- demo-admin@srmacshop.com / DemoAdmin@123' . PHP_EOL;
-echo '- demo-clerk@srmacshop.com / DemoClerk@123' . PHP_EOL;
+echo '- demo-ecommerce@srmacshop.com / DemoEcom@1234' . PHP_EOL;

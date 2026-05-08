@@ -9,15 +9,39 @@ use PDO;
 
 final class UserRepository
 {
+    /**
+     * Roles allowed for staff/POS accounts. Reflected in HttpKernel role gates
+     * (`requireRole(['admin'])`, `requireRole(['admin','ecommerce'])`).
+     *
+     * @var list<string>
+     */
+    public const ALLOWED_ROLES = ['admin', 'ecommerce'];
+
     public function __construct(private readonly PDO $db)
     {
     }
 
-    public function create(string $name, string $email, string $password, string $role = 'admin'): int
+    /**
+     * @return list<string>
+     */
+    public static function allowedRoles(): array
+    {
+        return self::ALLOWED_ROLES;
+    }
+
+    public function create(string $name, string $email, string $password, string $role): int
     {
         if (!filter_var($email, FILTER_VALIDATE_EMAIL)) {
             throw new InvalidArgumentException('Invalid email address.');
         }
+        if (!in_array($role, self::ALLOWED_ROLES, true)) {
+            throw new InvalidArgumentException(sprintf(
+                'Invalid role "%s". Allowed roles: %s.',
+                $role,
+                implode(', ', self::ALLOWED_ROLES)
+            ));
+        }
+        PasswordPolicy::assert($password);
 
         $hash = password_hash($password, PASSWORD_DEFAULT);
         $stmt = $this->db->prepare(
@@ -38,9 +62,7 @@ final class UserRepository
         if (!filter_var($email, FILTER_VALIDATE_EMAIL)) {
             throw new InvalidArgumentException('Invalid email address.');
         }
-        if ($newPassword === '') {
-            throw new InvalidArgumentException('Password cannot be empty.');
-        }
+        PasswordPolicy::assert($newPassword);
 
         $hash = password_hash($newPassword, PASSWORD_DEFAULT);
         $stmt = $this->db->prepare(

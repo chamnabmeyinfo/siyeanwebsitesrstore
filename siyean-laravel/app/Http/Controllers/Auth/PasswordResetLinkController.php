@@ -24,20 +24,19 @@ final class PasswordResetLinkController extends Controller
 
         $email = strtolower((string) $request->string('email'));
 
+        // Always return the same neutral response so the form does not reveal
+        // whether an account exists for the supplied address (avoids account
+        // enumeration via the password reset form).
+        $neutralStatus = __('If an account exists for that email, we have sent a password reset link.');
+
         $user = User::query()
             ->where('email', $email)
             ->first();
 
-        if (! $user instanceof User) {
-            return back()->withErrors([
-                'email' => __('We could not find an account with that email address.'),
-            ])->onlyInput('email');
+        if ($user instanceof User) {
+            Password::sendResetLink(['email' => $email]);
         }
 
-        $status = Password::sendResetLink(['email' => $email]);
-
-        return $status === Password::RESET_LINK_SENT
-            ? back()->with('status', __($status))
-            : back()->withErrors(['email' => __($status)]);
+        return back()->with('status', $neutralStatus);
     }
 }

@@ -20,6 +20,13 @@ final class RegisteredUserController extends Controller
 
     public function store(Request $request): RedirectResponse
     {
+        // Lowercase BEFORE the unique check, so "Owner@example.com" and
+        // "owner@example.com" cannot register as two separate accounts even on
+        // databases configured with case-sensitive collations.
+        $request->merge([
+            'email' => strtolower((string) $request->input('email', '')),
+        ]);
+
         $validated = $request->validate([
             'name' => ['required', 'string', 'max:255'],
             'email' => ['required', 'string', 'email', 'max:255', 'unique:'.User::class],
