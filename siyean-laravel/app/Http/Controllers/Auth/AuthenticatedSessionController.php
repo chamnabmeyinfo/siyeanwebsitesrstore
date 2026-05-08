@@ -80,11 +80,11 @@ final class AuthenticatedSessionController extends Controller
 
         $request->session()->regenerate();
 
-        $destination = $user instanceof User && $user->role === 'owner'
-            ? '/dashboard'
-            : route('account');
+        if ($user instanceof User && $user->role === 'owner') {
+            return redirect('/dashboard');
+        }
 
-        return redirect()->intended($destination);
+        return redirect()->intended(route('account'));
     }
 
     public function destroy(Request $request): RedirectResponse
