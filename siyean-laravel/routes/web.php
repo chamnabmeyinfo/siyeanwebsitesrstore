@@ -10,7 +10,14 @@ use App\Http\Controllers\Auth\NewPasswordController;
 use App\Http\Controllers\Auth\PasswordResetLinkController;
 use App\Http\Controllers\Auth\RegisteredUserController;
 use App\Http\Controllers\Auth\WebsiteAccountController;
+use App\Http\Controllers\CartController;
+use App\Http\Controllers\CheckoutController;
+use App\Http\Controllers\ContactController;
+use App\Http\Controllers\HomeController;
 use App\Http\Controllers\LegacyBridgeController;
+use App\Http\Controllers\LocaleController;
+use App\Http\Controllers\ProductCatalogController;
+use App\Http\Middleware\SetLocale;
 use Illuminate\Foundation\Http\Middleware\ValidateCsrfToken;
 use Illuminate\Session\Middleware\StartSession;
 use Illuminate\Support\Facades\Route;
@@ -57,10 +64,34 @@ Route::middleware(['auth', 'owner'])
         Route::delete('store-menu/{storeMenu}', [StoreMenuController::class, 'destroy'])->name('store-menu.destroy');
     });
 
+// Storefront (Laravel-native, replaces legacy /siyean store).
+Route::middleware(SetLocale::class)->group(function (): void {
+    Route::get('/', [HomeController::class, 'index'])->name('storefront.home');
+    Route::get('/products', [ProductCatalogController::class, 'index'])->name('storefront.products');
+    Route::get('/products/{slug}', [ProductCatalogController::class, 'show'])->name('storefront.products.show');
+    Route::get('/contact', [ContactController::class, 'index'])->name('storefront.contact');
+
+    Route::get('/cart', [CartController::class, 'index'])->name('storefront.cart');
+    Route::post('/cart/add', [CartController::class, 'add'])->name('storefront.cart.add');
+    Route::patch('/cart/{product}', [CartController::class, 'update'])->name('storefront.cart.update');
+    Route::delete('/cart/{product}', [CartController::class, 'remove'])->name('storefront.cart.remove');
+
+    Route::get('/checkout', [CheckoutController::class, 'show'])->name('storefront.checkout');
+    Route::post('/checkout', [CheckoutController::class, 'store'])->name('storefront.checkout.store');
+    Route::get('/checkout/success', [CheckoutController::class, 'success'])->name('storefront.checkout.success');
+
+    Route::get('/locale/{locale}', [LocaleController::class, 'switch'])->name('storefront.locale');
+
+    Route::middleware('auth')->group(function (): void {
+        Route::get('/account/orders', [WebsiteAccountController::class, 'orders'])->name('storefront.account.orders');
+    });
+});
+
 // Legacy POS uses PHP native sessions (`$_SESSION['user_id']`). Laravel's StartSession must not run first,
 // or session_start() becomes a no-op and staff login never persists across requests.
-Route::any('/{any?}', [LegacyBridgeController::class, 'handle'])
-    ->where('any', '.*')
+// Only catch unmatched paths under specific legacy roots so the storefront takes priority.
+Route::any('/{any}', [LegacyBridgeController::class, 'handle'])
+    ->where('any', '^(dashboard|inventory|sales|bookings|store|auth|api|siyean)(/.*)?$')
     ->withoutMiddleware([
         ValidateCsrfToken::class,
         StartSession::class,

@@ -62,4 +62,31 @@ class Product extends Model
     {
         return (float) ($this->online_price ?? $this->list_price);
     }
+
+    public function getCategoryAttribute(): string
+    {
+        $model = (string) $this->model;
+        return match (true) {
+            (bool) preg_match('/macbook\s*air/i', $model) => 'macbook-air',
+            (bool) preg_match('/macbook\s*pro/i', $model) => 'macbook-pro',
+            (bool) preg_match('/(case|sleeve|cover|protect|screen|guard|skin)/i', $model) => 'protection',
+            default => 'accessories',
+        };
+    }
+
+    public function getCategoryLabelAttribute(): string
+    {
+        return config('shop.categories.'.$this->category, 'Accessories');
+    }
+
+    public function getStockStatusAttribute(): string
+    {
+        $threshold = (int) config('shop.low_stock_threshold', 2);
+        $qty = (int) $this->quantity_on_hand;
+        return match (true) {
+            $qty <= 0 => 'out_of_stock',
+            $qty <= $threshold => 'low_stock',
+            default => 'in_stock',
+        };
+    }
 }
